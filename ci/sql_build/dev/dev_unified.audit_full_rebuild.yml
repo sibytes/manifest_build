@@ -14,3 +14,7 @@ manifest:
   schema:
     scripts:
       - schema/audit.sql
+
+  tables:
+    scripts:
+      - audit/table/*.sql

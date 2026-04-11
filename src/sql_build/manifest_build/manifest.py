@@ -17,6 +17,8 @@ class Variable(Enum):
 class Script():
     file:str
     variables:dict[Variable, str]
+    catalog:str
+    use_catalog:bool
     sql:str | None = field(default=None)
     error:str | None = field(default=None)
     succeeded:bool = field(default=False)
@@ -32,21 +34,31 @@ class Script():
     def run(self, dry_run:bool=False):
         log = logging.getLogger(app_name)
         log.info(f"Running script {self.file}")
-        sql_commands = [s.strip() for s in self.sql.split(";")]
+        if self.use_catalog:
+            try:    
+                use_sql = f"USE CATALOG {self.catalog}"
+                log.info(use_sql)
+                if not dry_run:
+                    spark.sql(use_sql)
+            except Exception as e:
+                log.error(f"Error running script {self.file}: {e}")
+                self.succeeded = False
+                self.error = str(e)
 
+        sql_commands = [s.strip() for s in self.sql.split(";")]
         for sql_command in sql_commands:
             if sql_command:
                 try:
-                    log.info(f"Running SQL command: {sql_command}")
+                    log.info(f"Running SQL command: {sql_command}")  
                     if not dry_run:
                         spark.sql(sql_command)
                     self.succeeded = True
+
                 except Exception as e:
                     log.error(f"Error running script {self.file}: {e}")
                     self.succeeded = False
                     self.error = str(e)
                     break
-
 
     def render_jinja(
             self, data:str, 
@@ -70,6 +82,7 @@ class Script():
 
 @dataclass
 class Manifest():
+    
     manifest_file:str
     manifest:dict
     environment:Environment
@@ -83,31 +96,42 @@ class Manifest():
         try:
             self.catalog = self.manifest["manifest"]["catalog_name"]
         except Exception as e:            
-            log.error(f"Error loading manifest file {self.manifest_file}: {e}")
-            raise Exception(f"Error loading manifest file {self.manifest_file}: {e}")
+            error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
+            log.error(error_msg)
+            raise Exception(error_msg)
     
         Manifest.validate_catalog_name(self.catalog, self.environment)
         
         try:
             self.sql_project_root = self.manifest["manifest"]["sql_project_root"]
         except Exception as e:            
-            log.error(f"Error loading manifest file {self.manifest_file}: {e}")
-            raise Exception(f"Error loading manifest file {self.manifest_file}: {e}")
+            error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
+            log.error(error_msg)
+            raise Exception(error_msg)
+        
         self.sql_project_root = os.getcwd() + "/" + self.sql_project_root
 
         try:
             script_group:list[str] = self.manifest["manifest"][group]["scripts"]
-        except Exception as e:            
-            log.error(f"Error loading manifest file {self.manifest_file}: {e}")
-            raise Exception(f"Error loading manifest file {self.manifest_file}: {e}")
+        except Exception as e:         
+            error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
+            log.error(error_msg)
+            raise Exception(error_msg)
         
         self.scripts:list[Script] = []
         for script_file in script_group:
             glob_path = self.sql_project_root + "/" + script_file
             log.info(f"Loading script(s) {glob_path}")
             files = glob.glob(glob_path)
+            if not files:
+                error_msg = f"No files found for script {script_file} with glob path {glob_path} in manifest {self.manifest_file}"
+                log.error(error_msg)
+                raise Exception(error_msg)
+            
             for file in files:
                 script:Script = Script(
+                    catalog=self.catalog,
+                    use_catalog=group!="catalog",
                     file=file,
                     variables={
                         Variable.catalog: self.catalog,

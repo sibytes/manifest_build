@@ -1,1 +1,1 @@
-create schema if not exists `audit`
+create schema if not exists {{catalog}}.`audit`
