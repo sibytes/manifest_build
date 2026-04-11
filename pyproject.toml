@@ -4,6 +4,7 @@ version = "0.0.1"
 authors = [{ name = "shaun.ryan@shaunchiburihotmail.onmicrosoft.com" }]
 requires-python = ">=3.10,<3.13"
 dependencies = [
+    "jinja2>=3.1.6",
     # Any dependencies for jobs and pipelines in this project can be added here
     # See also https://docs.databricks.com/dev-tools/bundles/library-dependencies
     #
@@ -22,7 +23,7 @@ dev = [
 ]
 
 [project.scripts]
-main = "sql_build.main:main"
+main = "sql_build.entry_point:build_manifest"
 
 [build-system]
 requires = ["hatchling"]
