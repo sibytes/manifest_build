@@ -1,0 +1,16 @@
+manifest:
+  name: full_rebuild
+  sql_project_root: src/sql
+  catalog_name: dev_unified
+
+  pre_build:
+    scripts:
+      - pre_build/drop_audit_tables.sql
+
+  catalog:
+    scripts:
+      - catalog/unified.sql
+
+  schema:
+    scripts:
+      - schema/audit.sql
