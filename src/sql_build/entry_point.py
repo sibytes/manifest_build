@@ -50,8 +50,6 @@ def parse_argument_environment(args:Namespace, value:str|None) -> Namespace:
         value = Environment(value)
     except Exception:
         exception_msg = f"Argument '{args.name}' must be a valid environment. Received value: {value}"
-        
-        log.error(exception_msg)
         raise ValueError(exception_msg)
 
     return value

@@ -7,7 +7,7 @@ _log_level = os.getenv("LOG_LEVEL", "INFO")
 console_handler = logging.StreamHandler()
 console_handler.setLevel(_log_level)
 formatter = logging.Formatter(
-    "%(levelnames)s : %(asctime)s : %(name)s : %(modules)s.%(funcName)s : line(%(lineno)s) : %(message)s"
+    "%(levelname)s : %(asctime)s : %(name)s : %(module)s.%(funcName)s: line(%(lineno)s) : %(message)s"
 )
 console_handler.setFormatter(formatter)
 logger_b = logging.getLogger(app_name)

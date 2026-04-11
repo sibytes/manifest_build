@@ -41,9 +41,8 @@ class Script():
                 if not dry_run:
                     spark.sql(use_sql)
             except Exception as e:
-                log.error(f"Error running script {self.file}: {e}")
                 self.succeeded = False
-                self.error = str(e)
+                self.error = str(e).split('\n')[0]
 
         sql_commands = [s.strip() for s in self.sql.split(";")]
         for sql_command in sql_commands:
@@ -55,9 +54,10 @@ class Script():
                     self.succeeded = True
 
                 except Exception as e:
-                    log.error(f"Error running script {self.file}: {e}")
                     self.succeeded = False
                     self.error = str(e)
+                    self.error = self.error.split('JVM stacktrace', maxsplit=1)[0]
+                    self.error = self.error.strip()
                     break
 
     def render_jinja(
@@ -97,7 +97,6 @@ class Manifest():
             self.catalog = self.manifest["manifest"]["catalog_name"]
         except Exception as e:            
             error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
-            log.error(error_msg)
             raise Exception(error_msg)
     
         Manifest.validate_catalog_name(self.catalog, self.environment)
@@ -106,7 +105,6 @@ class Manifest():
             self.sql_project_root = self.manifest["manifest"]["sql_project_root"]
         except Exception as e:            
             error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
-            log.error(error_msg)
             raise Exception(error_msg)
         
         self.sql_project_root = os.getcwd() + "/" + self.sql_project_root
@@ -115,7 +113,6 @@ class Manifest():
             script_group:list[str] = self.manifest["manifest"][group]["scripts"]
         except Exception as e:         
             error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
-            log.error(error_msg)
             raise Exception(error_msg)
         
         self.scripts:list[Script] = []
@@ -125,7 +122,6 @@ class Manifest():
             files = glob.glob(glob_path)
             if not files:
                 error_msg = f"No files found for script {script_file} with glob path {glob_path} in manifest {self.manifest_file}"
-                log.error(error_msg)
                 raise Exception(error_msg)
             
             for file in files:
@@ -149,10 +145,14 @@ class Manifest():
             if not script.succeeded:
                 self.errors[script.file] = script.error
 
-    def raise_errors(self):
+    def raise_errors(self, log_and_continue:bool=False):
+        log = logging.getLogger(app_name)
         if self.errors:
             error_messages = "\n".join([f"{file}: {error}" for file, error in self.errors.items()])
-            raise Exception(f"Errors occurred while running manifest {self.manifest_file}:\n{error_messages}")
+            if log_and_continue:
+                log.error(f"Errors occurred while running manifest {self.manifest_file}:\n{error_messages}")
+            else:
+                raise Exception(f"Errors occurred while running manifest {self.manifest_file}:\n{error_messages}")
 
 
     @classmethod
@@ -163,26 +163,21 @@ class Manifest():
         envs = ",".join([e.value for e in Environment])
         exception_msg = f"catalog={catalog} must be a 2 or 3 part name. The prefix must be a valid environment ({envs}). The second part must be the name unified. The suffix can be any name. Examples: dev_unified, dev_unified_test, tst_unified"
         if not name_parts or len(name_parts) not in [2,3]:
-            log.error(exception_msg)
             raise Exception(exception_msg)
         
         try:
             catalog_environment = Environment(name_parts[0])
         except Exception:
-            log.error(exception_msg)
             raise Exception(exception_msg)
         
         if catalog_environment != environment:
             exception_msg = f"Catalog environment {catalog_environment} does not match manifest environment {environment}"
-            log.error(exception_msg)
             raise Exception(exception_msg)
         
         try:
             if name_parts[1] != "unified":
-                log.error(exception_msg)
                 raise Exception(exception_msg)
         except Exception:
-            log.error(exception_msg)
             raise Exception(exception_msg)
 
     
