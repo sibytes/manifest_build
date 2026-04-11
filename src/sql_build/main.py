@@ -1,24 +1,34 @@
+import logging
 import argparse
 from databricks.sdk.runtime import spark
-from sql_build import taxis
+from argparse import Namespace
+from .manifest_build.logging_config import app_name
 
 
-def main():
-    # Process command-line arguments
-    parser = argparse.ArgumentParser(
-        description="Databricks job with catalog and schema parameters",
-    )
-    parser.add_argument("--catalog", required=True)
-    parser.add_argument("--schema", required=True)
-    args = parser.parse_args()
+def parse_argument_string(args:Namespace, value:str|None) -> Namespace:
 
-    # Set the default catalog and schema
-    spark.sql(f"USE CATALOG {args.catalog}")
-    spark.sql(f"USE SCHEMA {args.schema}")
+    if value is None:
+        value = args.name
+        if isinstance(value, str):
+            value = value[0]
 
-    # Example: just find all taxis from a sample catalog
-    taxis.find_all_taxis().show(5)
+    if value is None:
+        raise ValueError(f"Argument '{args.name}' is required.")
+
+    return value
 
 
-if __name__ == "__main__":
-    main()
+def build_manifest(catalog:str=None):
+
+    log = logging.getLogger(app_name)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--catalog", nargs=1, default=None)
+    args = parser.parse_known_args()
+    log.info(f"{args}")
+
+    catalog = parse_argument_string(args, catalog)
+
+
+
+
