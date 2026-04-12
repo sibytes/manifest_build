@@ -79,6 +79,20 @@ class Script():
         log.info(f"Rendered jinja for script {data}")
         return data
 
+@dataclass
+class Group():
+    group:str
+    scripts:list[Script]
+    execution_order:int
+
+@dataclass
+class ScriptError():
+    group:str
+    file:str
+    error:str
+
+    def __str__(self):
+        return f"Group: {self.group}, File: {self.file}, Error: {self.error}"
 
 @dataclass
 class Manifest():
@@ -88,10 +102,10 @@ class Manifest():
     environment:Environment
     catalog:str | None = field(default=None)
     sql_project_root:str | None = field(default=None)
-    scripts:list[Script] | None = field(default=None)
-    errors:dict[str, str] | None = field(default=None)
+    groups:list[Group] = field(default=None)
+    errors:list[ScriptError] | None = field(default=None)
 
-    def load(self, group:str):
+    def load(self, group:str|list[str] = ""):
         log = logging.getLogger(app_name)
         try:
             self.catalog = self.manifest["manifest"]["catalog_name"]
@@ -108,6 +122,56 @@ class Manifest():
             raise Exception(error_msg)
         
         self.sql_project_root = os.getcwd() + "/" + self.sql_project_root
+        self.groups = []
+
+        if isinstance(group, str) and group == "":
+            for group, data in self.manifest["manifest"].items():
+                if group in ["name","catalog_name", "sql_project_root"]:
+                    continue
+                
+                try:
+                    execution_order:int = int(data.get("execution_order", 0))
+                except (ValueError, TypeError):
+                    execution_order = 0
+                    warning_msg = f"Warning loading manifest file {self.manifest_file}: integerexecution_order for group {group} is not defined"
+                    raise Warning(warning_msg)
+
+                self.groups.append(
+                    Group(  
+                        group=group,
+                        scripts=self._load_group_script(group),
+                        execution_order=execution_order
+                    )
+                )
+            self.groups.sort(key=lambda group: group.execution_order)
+        elif isinstance(group, str) and group != "":
+            self.groups.append(
+                Group(
+                    group=group,
+                    scripts=self._load_group_script(group),
+                    execution_order=0
+                )
+            )
+        elif isinstance(group, list):
+            for g in group:
+                if not isinstance(g, str) or not g:
+                    error_msg = f"Invalid group type {type(g)} for group {g} in manifest {self.manifest_file}. Group must be a string."
+                    raise Exception(error_msg)
+                self.groups.append(
+                    Group(
+                        group=g,
+                        scripts=self._load_group_script(g),
+                        execution_order=0
+                    )
+                )
+        else:
+            error_msg = f"Invalid group type {type(group)} for group {group} in manifest {self.manifest_file}"
+            raise Exception(error_msg)
+
+
+    def _load_group_script(self, group:str):
+        log = logging.getLogger(app_name)
+        scripts:list[Script] = []
 
         try:
             script_group:list[str] = self.manifest["manifest"][group]["scripts"]
@@ -115,7 +179,6 @@ class Manifest():
             error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
             raise Exception(error_msg)
         
-        self.scripts:list[Script] = []
         for script_file in script_group:
             glob_path = self.sql_project_root + "/" + script_file
             log.info(f"Loading script(s) {glob_path}")
@@ -134,21 +197,30 @@ class Manifest():
                         Variable.environment: self.environment.value
                     }
                 )
-                self.scripts.append(script)
+                scripts.append(script)
 
-        log = logging.getLogger(app_name)
+        return scripts
+
 
     def run(self, dry_run:bool=False):
         self.errors = {}
-        for script in self.scripts:
-            script.run(dry_run=dry_run)
-            if not script.succeeded:
-                self.errors[script.file] = script.error
+        for group in self.groups:
+            log = logging.getLogger(app_name)
+            log.info(f"Running group {group.group} with execution order {group.execution_order}")
+            for script in group.scripts:
+                script.run(dry_run=dry_run)
+                if not script.succeeded:
+                    self.errors.append(
+                        ScriptError(group=group.group, 
+                                    file=script.file,
+                                    error=script.error)
+                    )
+
 
     def raise_errors(self, log_and_continue:bool=False):
         log = logging.getLogger(app_name)
         if self.errors:
-            error_messages = "\n".join([f"{file}: {error}" for file, error in self.errors.items()])
+            error_messages = "\n".join([str(error) for error in self.errors])
             if log_and_continue:
                 log.error(f"Errors occurred while running manifest {self.manifest_file}:\n{error_messages}")
             else:
@@ -211,8 +283,8 @@ class Manifest():
             cls,
             environment:Environment,
             manifest_name:str,
-            group:str,
             manifest_path:str,
+            group:str|list[str] = "",
             extension:str="yml",
             dry_run:bool=False
     )->dict:

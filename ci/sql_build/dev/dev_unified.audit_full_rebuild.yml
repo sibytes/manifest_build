@@ -4,17 +4,21 @@ manifest:
   catalog_name: dev_unified
 
   pre_build:
+    execution_order: 2
     scripts:
       - pre_build/drop_audit_tables.sql
 
   catalog:
+    execution_order: 0
     scripts:
       - catalog/unified.sql
 
   schema:
+    execution_order: 1
     scripts:
       - schema/audit.sql
 
   tables:
+    execution_order: 3
     scripts:
       - audit/table/*.sql

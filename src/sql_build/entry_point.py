@@ -58,7 +58,7 @@ def parse_argument_environment(args:Namespace, value:str|None) -> Namespace:
 def build_manifest(
         environment:str=None,
         manifest_name:str=None,
-        group:str=None,
+        group:str="",
         manifest_path:str=None,
         dry_run:bool=False
     ):
