@@ -16,15 +16,16 @@ class Variable(Enum):
     catalog = "catalog"
     environment = "environment"
 
+
 @dataclass
 class Script:
-    file:str
-    variables:dict[Variable, str]
-    catalog:str
-    use_catalog:bool
-    sql:str | None = field(default=None)
-    error:str | None = field(default=None)
-    succeeded:bool = field(default=False)
+    file: str
+    variables: dict[Variable, str]
+    catalog: str
+    use_catalog: bool
+    sql: str | None = field(default=None)
+    error: str | None = field(default=None)
+    succeeded: bool = field(default=False)
 
     def __post_init__(self):
         log = logging.getLogger(app_name)
@@ -34,24 +35,24 @@ class Script:
 
         self.sql = self.render_jinja(self.sql, self.variables)
 
-    def run(self, dry_run:bool=False):
+    def run(self, dry_run: bool = False):
         log = logging.getLogger(app_name)
         log.info(f"Running script {self.file}")
         if self.use_catalog:
-            try:    
+            try:
                 use_sql = f"USE CATALOG {self.catalog}"
                 log.info(use_sql)
                 if not dry_run:
                     spark.sql(use_sql)
             except Exception as e:
                 self.succeeded = False
-                self.error = str(e).split('\n')[0]
+                self.error = str(e).split("\n")[0]
 
         sql_commands = [s.strip() for s in self.sql.split(";")]
         for sql_command in sql_commands:
             if sql_command:
                 try:
-                    log.info(f"Running SQL command: {sql_command}")  
+                    log.info(f"Running SQL command: {sql_command}")
                     if not dry_run:
                         spark.sql(sql_command)
                     self.succeeded = True
@@ -59,20 +60,17 @@ class Script:
                 except Exception as e:
                     self.succeeded = False
                     self.error = str(e)
-                    self.error = self.error.split('JVM stacktrace', maxsplit=1)[0]
+                    self.error = self.error.split("JVM stacktrace", maxsplit=1)[0]
                     self.error = self.error.strip()
                     break
 
-    def render_jinja(
-            self, data:str, 
-            replacements:dict[Variable, str]
-        ) -> str:
+    def render_jinja(self, data: str, replacements: dict[Variable, str]) -> str:
         log = logging.getLogger(app_name)
         log.info(f"Rendering jinja for script {data} with replacements {replacements}")
         if data and isinstance(data, str):
-            replace = {k.value: v for (k,v) in replacements.items()}
+            replace = {k.value: v for (k, v) in replacements.items()}
             skip = False
-            for k,v in replace.items():
+            for k, v in replace.items():
                 if v is None and "{{" + k + "}}" in data.replace(" "):
                     skip = True
                     break
@@ -82,106 +80,91 @@ class Script:
         log.info(f"Rendered jinja for script {data}")
         return data
 
+
 @dataclass
 class Group:
-    group:str
-    scripts:list[Script]
-    execution_order:int
+    group: str
+    scripts: list[Script]
+    execution_order: int
+
 
 @dataclass
 class ScriptError:
-    group:str
-    file:str
-    error:str
+    group: str
+    file: str
+    error: str
 
     def __str__(self):
         return f"Group: {self.group}, File: {self.file}, Error: {self.error}"
 
+
 @dataclass
 class Manifest:
-    
-    manifest_file:str
-    manifest:dict
-    environment:Environment
-    catalog:str | None = field(default=None)
-    sql_project_root:str | None = field(default=None)
-    groups:list[Group] = field(default=None)
-    errors:list[ScriptError] | None = field(default=None)
+    manifest_file: str
+    manifest: dict
+    environment: Environment
+    catalog: str | None = field(default=None)
+    sql_project_root: str | None = field(default=None)
+    groups: list[Group] = field(default=None)
+    errors: list[ScriptError] | None = field(default=None)
 
-    def load(self, group:str|list[str] = ""):
+    def load(self, group: str | list[str] = ""):
         log = logging.getLogger(app_name)
         try:
             self.catalog = self.manifest["manifest"]["catalog_name"]
-        except Exception as e:            
+        except Exception as e:
             error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
             raise Exception(error_msg)
-    
+
         Manifest.validate_catalog_name(self.catalog, self.environment)
-        
+
         try:
             self.sql_project_root = self.manifest["manifest"]["sql_project_root"]
-        except Exception as e:            
+        except Exception as e:
             error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
             raise Exception(error_msg)
-        
+
         self.sql_project_root = os.getcwd() + "/" + self.sql_project_root
         self.groups = []
 
         if isinstance(group, str) and group == "":
             for group, data in self.manifest["manifest"].items():
-                if group in ["name","catalog_name", "sql_project_root"]:
+                if group in ["name", "catalog_name", "sql_project_root"]:
                     continue
-                
+
                 try:
-                    execution_order:int = int(data.get("execution_order", 0))
+                    execution_order: int = int(data.get("execution_order", 0))
                 except (ValueError, TypeError):
                     execution_order = 0
                     warning_msg = f"Warning loading manifest file {self.manifest_file}: integerexecution_order for group {group} is not defined"
                     raise Warning(warning_msg)
 
                 self.groups.append(
-                    Group(  
-                        group=group,
-                        scripts=self._load_group_script(group),
-                        execution_order=execution_order
-                    )
+                    Group(group=group, scripts=self._load_group_script(group), execution_order=execution_order)
                 )
             self.groups.sort(key=lambda group: group.execution_order)
         elif isinstance(group, str) and group != "":
-            self.groups.append(
-                Group(
-                    group=group,
-                    scripts=self._load_group_script(group),
-                    execution_order=0
-                )
-            )
+            self.groups.append(Group(group=group, scripts=self._load_group_script(group), execution_order=0))
         elif isinstance(group, list):
             for g in group:
                 if not isinstance(g, str) or not g:
                     error_msg = f"Invalid group type {type(g)} for group {g} in manifest {self.manifest_file}. Group must be a string."
                     raise Exception(error_msg)
-                self.groups.append(
-                    Group(
-                        group=g,
-                        scripts=self._load_group_script(g),
-                        execution_order=0
-                    )
-                )
+                self.groups.append(Group(group=g, scripts=self._load_group_script(g), execution_order=0))
         else:
             error_msg = f"Invalid group type {type(group)} for group {group} in manifest {self.manifest_file}"
             raise Exception(error_msg)
 
-
-    def _load_group_script(self, group:str):
+    def _load_group_script(self, group: str):
         log = logging.getLogger(app_name)
-        scripts:list[Script] = []
+        scripts: list[Script] = []
 
         try:
-            script_group:list[str] = self.manifest["manifest"][group]["scripts"]
-        except Exception as e:         
+            script_group: list[str] = self.manifest["manifest"][group]["scripts"]
+        except Exception as e:
             error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
             raise Exception(error_msg)
-        
+
         for script_file in script_group:
             glob_path = self.sql_project_root + "/" + script_file
             log.info(f"Loading script(s) {glob_path}")
@@ -189,23 +172,19 @@ class Manifest:
             if not files:
                 error_msg = f"No files found for script {script_file} with glob path {glob_path} in manifest {self.manifest_file}"
                 raise Exception(error_msg)
-            
+
             for file in files:
-                script:Script = Script(
+                script: Script = Script(
                     catalog=self.catalog,
-                    use_catalog=group!="catalog",
+                    use_catalog=group != "catalog",
                     file=file,
-                    variables={
-                        Variable.catalog: self.catalog,
-                        Variable.environment: self.environment.value
-                    }
+                    variables={Variable.catalog: self.catalog, Variable.environment: self.environment.value},
                 )
                 scripts.append(script)
 
         return scripts
 
-
-    def run(self, dry_run:bool=False):
+    def run(self, dry_run: bool = False):
         self.errors = {}
         for group in self.groups:
             log = logging.getLogger(app_name)
@@ -213,14 +192,9 @@ class Manifest:
             for script in group.scripts:
                 script.run(dry_run=dry_run)
                 if not script.succeeded:
-                    self.errors.append(
-                        ScriptError(group=group.group, 
-                                    file=script.file,
-                                    error=script.error)
-                    )
+                    self.errors.append(ScriptError(group=group.group, file=script.file, error=script.error))
 
-
-    def raise_errors(self, log_and_continue:bool=False):
+    def raise_errors(self, log_and_continue: bool = False):
         log = logging.getLogger(app_name)
         if self.errors:
             error_messages = "\n".join([str(error) for error in self.errors])
@@ -229,42 +203,38 @@ class Manifest:
             else:
                 raise Exception(f"Errors occurred while running manifest {self.manifest_file}:\n{error_messages}")
 
-
     @classmethod
-    def validate_catalog_name(cls, catalog:str, environment:Environment) -> str:
+    def validate_catalog_name(cls, catalog: str, environment: Environment) -> str:
         log = logging.getLogger(app_name)
 
         name_parts = catalog.split("_")
         envs = ",".join([e.value for e in Environment])
         exception_msg = f"catalog={catalog} must be a 2 or 3 part name. The prefix must be a valid environment ({envs}). The second part must be the name unified. The suffix can be any name. Examples: dev_unified, dev_unified_test, tst_unified"
-        if not name_parts or len(name_parts) not in [2,3]:
+        if not name_parts or len(name_parts) not in [2, 3]:
             raise Exception(exception_msg)
-        
+
         try:
             catalog_environment = Environment(name_parts[0])
         except Exception:
             raise Exception(exception_msg)
-        
+
         if catalog_environment != environment:
-            exception_msg = f"Catalog environment {catalog_environment} does not match manifest environment {environment}"
+            exception_msg = (
+                f"Catalog environment {catalog_environment} does not match manifest environment {environment}"
+            )
             raise Exception(exception_msg)
-        
+
         try:
             if name_parts[1] != "unified":
                 raise Exception(exception_msg)
         except Exception:
             raise Exception(exception_msg)
 
-    
     @classmethod
     def _collect_manifest(
-        cls,
-        environment:Environment,
-        manifest_name:str,
-        manifest_path:str,
-        extension:str
-    )-> dict:
-        
+        cls, environment: Environment, manifest_name: str, manifest_path: str, extension: str
+    ) -> dict:
+
         log = logging.getLogger(app_name)
         manifest_file = f"{manifest_path}/{environment.name}/{manifest_name}.{extension}"
         log.info(f"Collecting manifest from {manifest_file}")
@@ -272,31 +242,24 @@ class Manifest:
 
         with open(manifest_file, "r") as f:
             manifest = yaml.safe_load(f)
-        
-        manifest:Manifest = Manifest(
-            environment=environment,
-            manifest_file=manifest_file,
-            manifest=manifest
-        )
+
+        manifest: Manifest = Manifest(environment=environment, manifest_file=manifest_file, manifest=manifest)
 
         return manifest
-    
+
     @classmethod
     def build_manifest(
-            cls,
-            environment:Environment,
-            manifest_name:str,
-            manifest_path:str,
-            group:str|list[str] = "",
-            extension:str="yml",
-            dry_run:bool=False
-    )->dict:
-        
-        manifest:Manifest = cls._collect_manifest(
-            environment=environment,
-            manifest_name=manifest_name,
-            manifest_path=manifest_path,
-            extension=extension
+        cls,
+        environment: Environment,
+        manifest_name: str,
+        manifest_path: str,
+        group: str | list[str] = "",
+        extension: str = "yml",
+        dry_run: bool = False,
+    ) -> dict:
+
+        manifest: Manifest = cls._collect_manifest(
+            environment=environment, manifest_name=manifest_name, manifest_path=manifest_path, extension=extension
         )
 
         log = logging.getLogger(app_name)
@@ -308,5 +271,5 @@ class Manifest:
         manifest.run(dry_run=dry_run)
 
         manifest.raise_errors()
-        
+
         return manifest

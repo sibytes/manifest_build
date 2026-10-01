@@ -19,13 +19,12 @@ def get_src_path() -> str:
         raise Exception(f"Cannot resolve path to sql source files. Path doesn't exist {path}")
 
 
-def parse_argument_bool(args:Namespace, value:bool|str|None) -> Namespace:
+def parse_argument_bool(args: Namespace, value: bool | str | None) -> Namespace:
 
     if value is None:
         value = args.name
         if isinstance(value, list):
             value = value[0]
-        
 
     if value is None:
         raise ValueError(f"Argument '{args.name}' is required.")
@@ -37,7 +36,8 @@ def parse_argument_bool(args:Namespace, value:bool|str|None) -> Namespace:
 
     return value
 
-def parse_argument_string(args:Namespace, value:str|None) -> Namespace:
+
+def parse_argument_string(args: Namespace, value: str | None) -> Namespace:
 
     if value is None:
         value = args.name
@@ -49,7 +49,8 @@ def parse_argument_string(args:Namespace, value:str|None) -> Namespace:
 
     return value
 
-def parse_argument_environment(args:Namespace, value:str|None) -> Namespace:
+
+def parse_argument_environment(args: Namespace, value: str | None) -> Namespace:
     log = logging.getLogger(app_name)
     if value is None:
         value = args.name
@@ -69,12 +70,12 @@ def parse_argument_environment(args:Namespace, value:str|None) -> Namespace:
 
 
 def build_manifest(
-        environment:str=None,
-        manifest_name:str=None,
-        group:str="",
-        manifest_path:str=None,
-        dry_run:bool=False
-    ):
+    environment: str = None,
+    manifest_name: str = None,
+    group: str = "",
+    manifest_path: str = None,
+    dry_run: bool = False,
+):
 
     log = logging.getLogger(app_name)
 
@@ -95,13 +96,9 @@ def build_manifest(
 
     Manifest.build_manifest(
         environment=environment,
-        manifest_path=manifest_path, 
-        group=group, 
-        manifest_name=manifest_name, 
+        manifest_path=manifest_path,
+        group=group,
+        manifest_name=manifest_name,
         extension="yml",
-        dry_run=dry_run
+        dry_run=dry_run,
     )
-    
-
-
-
