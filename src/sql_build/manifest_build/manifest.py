@@ -101,23 +101,32 @@ class ScriptError:
 
 @dataclass
 class Manifest:
+    catalog: str
+    component: str
+    root_path: str
     manifest_file: str
     manifest: dict
     environment: Environment
-    catalog: str | None = field(default=None)
     sql_project_root: str | None = field(default=None)
     groups: list[Group] = field(default=None)
     errors: list[ScriptError] | None = field(default=None)
 
     def load(self, group: str | list[str] = ""):
+
         log = logging.getLogger(app_name)
+
         try:
-            self.catalog = self.manifest["manifest"]["catalog_name"]
-        except Exception as e:
+            manifest_catalog = self.manifest["manifest"]["catalog_name"]
+        except KeyError as e:
             error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
             raise Exception(error_msg)
 
-        Manifest.validate_catalog_name(self.catalog, self.environment)
+        if manifest_catalog != self.catalog:
+            raise Exception(f"The manifest catalog {manifest_catalog} name does not match the catalog argument {self.catalog}")
+
+        
+        log.info(f"Validating catalog: {self.catalog} with component: {self.component} and environment: {self.environment.name}")
+        Manifest.validate_catalog_name(self.catalog, self.component, self.environment)
 
         try:
             self.sql_project_root = self.manifest["manifest"]["sql_project_root"]
@@ -125,7 +134,7 @@ class Manifest:
             error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
             raise Exception(error_msg)
 
-        self.sql_project_root = os.getcwd() + "/" + self.sql_project_root
+        self.sql_project_root = self.root_path + "/" + self.sql_project_root
         self.groups = []
 
         if isinstance(group, str) and group == "":
@@ -205,13 +214,13 @@ class Manifest:
                 raise Exception(f"Errors occurred while running manifest {self.manifest_file}:\n{error_messages}")
 
     @classmethod
-    def validate_catalog_name(cls, catalog: str, environment: Environment) -> str:
+    def validate_catalog_name(cls, catalog: str, component: str, environment: Environment) -> str:
         log = logging.getLogger(app_name)
-        log.info(f"Validating catalog name {catalog} for environment {environment}")
+        log.info(f"Validating catalog name {catalog}, component {component}, environment {environment}")
 
         name_parts = catalog.split("_")
         envs = ",".join([e.value for e in Environment])
-        exception_msg = f"catalog={catalog} must be a 2 or 3 part name. The prefix must be a valid environment ({envs}). The second part must be the name unified. The suffix can be any name. Examples: dev_unified, dev_unified_test, tst_unified"
+        exception_msg = f"catalog={catalog} must be a 2 or 3 part name. The prefix must be a valid environment ({envs}). The second part must be the name {component}. The suffix can be any name. Examples: dev_{component}, dev_{component}_test, tst_{component}"
         if not name_parts or len(name_parts) not in [2, 3]:
             raise CatalogNameError(exception_msg)
 
@@ -227,41 +236,64 @@ class Manifest:
             raise CatalogNameError(exception_msg)
 
         try:
-            if name_parts[1] != "unified":
+            if name_parts[1] != component:
                 raise CatalogNameError(exception_msg)
         except IndexError:
             raise CatalogNameError(exception_msg)
 
+
     @classmethod
     def _collect_manifest(
-        cls, environment: Environment, manifest_name: str, manifest_path: str, extension: str
+        cls, 
+        catalog: str,
+        component: str,
+        root_path: str,
+        environment: Environment, 
+        manifest_name: str,
+        manifest_path: str, 
+        extension: str
     ) -> dict:
 
         log = logging.getLogger(app_name)
-        manifest_file = f"{manifest_path}/{environment.name}/{manifest_name}.{extension}"
+        manifest_file = f"{root_path}/{manifest_path}/{environment.name}/{manifest_name}.{extension}"
         log.info(f"Collecting manifest from {manifest_file}")
-        log.info(f"Current working directory: {os.getcwd()}")
 
         with open(manifest_file, "r") as f:
             manifest = yaml.safe_load(f)
 
-        manifest: Manifest = Manifest(environment=environment, manifest_file=manifest_file, manifest=manifest)
+        manifest: Manifest = Manifest(
+            catalog=catalog,
+            component=component,
+            root_path=root_path,
+            environment=environment, 
+            manifest_file=manifest_file, 
+            manifest=manifest
+        )
 
         return manifest
 
     @classmethod
     def build_manifest(
         cls,
+        catalog: str,
         environment: Environment,
+        component: str,
         manifest_name: str,
         manifest_path: str,
+        root_path: str,
         group: str | list[str] = "",
-        extension: str = "yml",
         dry_run: bool = False,
+        extension: str = "yml",
     ) -> dict:
 
         manifest: Manifest = cls._collect_manifest(
-            environment=environment, manifest_name=manifest_name, manifest_path=manifest_path, extension=extension
+            catalog=catalog,
+            component=component,
+            root_path=root_path,
+            environment=environment, 
+            manifest_name=manifest_name, 
+            manifest_path=manifest_path, 
+            extension=extension
         )
 
         log = logging.getLogger(app_name)

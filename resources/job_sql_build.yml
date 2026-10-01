@@ -2,35 +2,33 @@
 
 resources:
   jobs:
-    sample_job:
-      name: sample_job
+    job_sql_build:
+      name: job_sql_build
 
-      trigger:
-        # Run this job every day, exactly one day from the last run; see https://docs.databricks.com/api/workspace/jobs/create#trigger
-        periodic:
-          interval: 1
-          unit: DAYS
 
       #email_notifications:
       #  on_failure:
       #    - your_email@example.com
 
       parameters:
+        - name: manifest_name
+          default: dev_unified.audit_full_rebuild
         - name: catalog
           default: ${var.catalog}
-        - name: schema
-          default: ${var.schema}
+        - name: dry_run
+          default: "False"
+        - name: group
+          default: ""
 
       tasks:
-        - task_key: python_wheel_task
+        - task_key: build_manifest
           python_wheel_task:
             package_name: sql_build
-            entry_point: main
-            parameters:
-              - "--catalog"
-              - "${var.catalog}"
-              - "--schema"
-              - "${var.schema}"
+            entry_point: sql_build_build_manifest
+            named_parameters:
+              component_name: unified
+              manifest_path: ./ci/sql_build
+              root_path: ${workspace.root_path}/files
           environment_key: default
 
       environments:
