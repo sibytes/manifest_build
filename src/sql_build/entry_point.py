@@ -2,13 +2,10 @@ import argparse
 import logging
 from argparse import Namespace
 
-from .manifest_build import Manifest
-from .manifest_build._environment import Environment
-from .manifest_build.logging_config import app_name
+from .manifest_build import Environment, Manifest, app_name
 
 
 def parse_argument_bool(args: Namespace, value: bool | str | None, default: bool | None = None) -> Namespace:
-
     args = args[0]
     if isinstance(value, bool):
         return value
@@ -33,7 +30,6 @@ def parse_argument_bool(args: Namespace, value: bool | str | None, default: bool
 
 
 def parse_argument_string(args: Namespace, value: str | None) -> Namespace:
-
     args = args[0]
 
     if isinstance(value, str):
@@ -55,7 +51,6 @@ def parse_argument_string(args: Namespace, value: str | None) -> Namespace:
 
 
 def parse_argument_environment(args: Namespace, value: str | None) -> Namespace:
-    log = logging.getLogger(app_name)
     if value is None:
         value = args.name
         if isinstance(value, list):
@@ -111,7 +106,6 @@ def build_manifest(
     root_path: str | None = None,
     dry_run: bool = False,
 ):
-
     log = logging.getLogger(app_name)
 
     parser = argparse.ArgumentParser()

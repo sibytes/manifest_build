@@ -8,7 +8,7 @@ import yaml
 from databricks.sdk.runtime import spark
 
 from ._environment import Environment
-from .exception import CatalogNameError
+from .exception import CatalogNameError, SqlBuildError
 from .logging_config import app_name
 
 
@@ -111,17 +111,16 @@ class Manifest:
     errors: list[ScriptError] | None = field(default=None)
 
     def load(self, group: str | list[str] = ""):
-
         log = logging.getLogger(app_name)
 
         try:
             manifest_catalog = self.manifest["manifest"]["catalog_name"]
         except KeyError as e:
             error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
-            raise Exception(error_msg)
+            raise SqlBuildError(error_msg)
 
         if manifest_catalog != self.catalog:
-            raise Exception(
+            raise SqlBuildError(
                 f"The manifest catalog {manifest_catalog} name does not match the catalog argument {self.catalog}"
             )
 
@@ -132,9 +131,9 @@ class Manifest:
 
         try:
             self.sql_project_root = self.manifest["manifest"]["sql_project_root"]
-        except Exception as e:
+        except (KeyError, TypeError) as e:
             error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
-            raise Exception(error_msg)
+            raise SqlBuildError(error_msg)
 
         self.sql_project_root = self.root_path + "/" + self.sql_project_root
         self.groups = []
@@ -161,11 +160,11 @@ class Manifest:
             for g in group:
                 if not isinstance(g, str) or not g:
                     error_msg = f"Invalid group type {type(g)} for group {g} in manifest {self.manifest_file}. Group must be a string."
-                    raise Exception(error_msg)
+                    raise SqlBuildError(error_msg)
                 self.groups.append(Group(group=g, scripts=self._load_group_script(g), execution_order=0))
         else:
             error_msg = f"Invalid group type {type(group)} for group {group} in manifest {self.manifest_file}"
-            raise Exception(error_msg)
+            raise SqlBuildError(error_msg)
 
     def _load_group_script(self, group: str):
         log = logging.getLogger(app_name)
@@ -173,9 +172,9 @@ class Manifest:
 
         try:
             script_group: list[str] = self.manifest["manifest"][group]["scripts"]
-        except Exception as e:
+        except (KeyError, TypeError) as e:
             error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
-            raise Exception(error_msg)
+            raise SqlBuildError(error_msg)
 
         for script_file in script_group:
             glob_path = self.sql_project_root + "/" + script_file
@@ -183,7 +182,7 @@ class Manifest:
             files = glob.glob(glob_path)
             if not files:
                 error_msg = f"No files found for script {script_file} with glob path {glob_path} in manifest {self.manifest_file}"
-                raise Exception(error_msg)
+                raise SqlBuildError(error_msg)
 
             for file in files:
                 script: Script = Script(
@@ -213,7 +212,7 @@ class Manifest:
             if log_and_continue:
                 log.error(f"Errors occurred while running manifest {self.manifest_file}:\n{error_messages}")
             else:
-                raise Exception(f"Errors occurred while running manifest {self.manifest_file}:\n{error_messages}")
+                raise SqlBuildError(f"Errors occurred while running manifest {self.manifest_file}:\n{error_messages}")
 
     @classmethod
     def validate_catalog_name(cls, catalog: str, component: str, environment: Environment) -> str:
@@ -254,7 +253,6 @@ class Manifest:
         manifest_path: str,
         extension: str,
     ) -> dict:
-
         log = logging.getLogger(app_name)
         manifest_file = f"{root_path}/{manifest_path}/{environment.name}/{manifest_name}.{extension}"
         log.info(f"Collecting manifest from {manifest_file}")
@@ -286,7 +284,6 @@ class Manifest:
         dry_run: bool = False,
         extension: str = "yml",
     ) -> dict:
-
         manifest: Manifest = cls._collect_manifest(
             catalog=catalog,
             component=component,
