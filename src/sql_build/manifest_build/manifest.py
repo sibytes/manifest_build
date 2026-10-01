@@ -9,6 +9,7 @@ import yaml
 from databricks.sdk.runtime import spark
 
 from ._environment import Environment
+from .exception import CatalogNameError
 from .logging_config import app_name
 
 
@@ -39,30 +40,30 @@ class Script:
         log = logging.getLogger(app_name)
         log.info(f"Running script {self.file}")
         if self.use_catalog:
-            try:
-                use_sql = f"USE CATALOG {self.catalog}"
-                log.info(use_sql)
-                if not dry_run:
+            use_sql = f"USE CATALOG {self.catalog}"
+            log.info(use_sql)
+            if not dry_run:
+                try:
                     spark.sql(use_sql)
-            except Exception as e:
-                self.succeeded = False
-                self.error = str(e).split("\n")[0]
+                except Exception as e:  # noqa: BLE001
+                    self.succeeded = False
+                    self.error = str(e).split("\n")[0]
 
         sql_commands = [s.strip() for s in self.sql.split(";")]
         for sql_command in sql_commands:
             if sql_command:
-                try:
-                    log.info(f"Running SQL command: {sql_command}")
-                    if not dry_run:
+                log.info(f"Running SQL command: {sql_command}")
+                if not dry_run:
+                    try:
                         spark.sql(sql_command)
-                    self.succeeded = True
+                    except Exception as e:  # noqa: BLE001
+                        self.succeeded = False
+                        self.error = str(e)
+                        self.error = self.error.split("JVM stacktrace", maxsplit=1)[0]
+                        self.error = self.error.strip()
+                        break
 
-                except Exception as e:
-                    self.succeeded = False
-                    self.error = str(e)
-                    self.error = self.error.split("JVM stacktrace", maxsplit=1)[0]
-                    self.error = self.error.strip()
-                    break
+                    self.succeeded = True
 
     def render_jinja(self, data: str, replacements: dict[Variable, str]) -> str:
         log = logging.getLogger(app_name)
@@ -206,29 +207,30 @@ class Manifest:
     @classmethod
     def validate_catalog_name(cls, catalog: str, environment: Environment) -> str:
         log = logging.getLogger(app_name)
+        log.info(f"Validating catalog name {catalog} for environment {environment}")
 
         name_parts = catalog.split("_")
         envs = ",".join([e.value for e in Environment])
         exception_msg = f"catalog={catalog} must be a 2 or 3 part name. The prefix must be a valid environment ({envs}). The second part must be the name unified. The suffix can be any name. Examples: dev_unified, dev_unified_test, tst_unified"
         if not name_parts or len(name_parts) not in [2, 3]:
-            raise Exception(exception_msg)
+            raise CatalogNameError(exception_msg)
 
         try:
             catalog_environment = Environment(name_parts[0])
-        except Exception:
-            raise Exception(exception_msg)
+        except (IndexError, ValueError):
+            raise CatalogNameError(exception_msg)
 
         if catalog_environment != environment:
             exception_msg = (
                 f"Catalog environment {catalog_environment} does not match manifest environment {environment}"
             )
-            raise Exception(exception_msg)
+            raise CatalogNameError(exception_msg)
 
         try:
             if name_parts[1] != "unified":
-                raise Exception(exception_msg)
-        except Exception:
-            raise Exception(exception_msg)
+                raise CatalogNameError(exception_msg)
+        except IndexError:
+            raise CatalogNameError(exception_msg)
 
     @classmethod
     def _collect_manifest(
