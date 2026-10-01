@@ -1,6 +1,5 @@
 import glob
 import logging
-import os
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -122,10 +121,13 @@ class Manifest:
             raise Exception(error_msg)
 
         if manifest_catalog != self.catalog:
-            raise Exception(f"The manifest catalog {manifest_catalog} name does not match the catalog argument {self.catalog}")
+            raise Exception(
+                f"The manifest catalog {manifest_catalog} name does not match the catalog argument {self.catalog}"
+            )
 
-        
-        log.info(f"Validating catalog: {self.catalog} with component: {self.component} and environment: {self.environment.name}")
+        log.info(
+            f"Validating catalog: {self.catalog} with component: {self.component} and environment: {self.environment.name}"
+        )
         Manifest.validate_catalog_name(self.catalog, self.component, self.environment)
 
         try:
@@ -241,17 +243,16 @@ class Manifest:
         except IndexError:
             raise CatalogNameError(exception_msg)
 
-
     @classmethod
     def _collect_manifest(
-        cls, 
+        cls,
         catalog: str,
         component: str,
         root_path: str,
-        environment: Environment, 
+        environment: Environment,
         manifest_name: str,
-        manifest_path: str, 
-        extension: str
+        manifest_path: str,
+        extension: str,
     ) -> dict:
 
         log = logging.getLogger(app_name)
@@ -265,9 +266,9 @@ class Manifest:
             catalog=catalog,
             component=component,
             root_path=root_path,
-            environment=environment, 
-            manifest_file=manifest_file, 
-            manifest=manifest
+            environment=environment,
+            manifest_file=manifest_file,
+            manifest=manifest,
         )
 
         return manifest
@@ -290,10 +291,10 @@ class Manifest:
             catalog=catalog,
             component=component,
             root_path=root_path,
-            environment=environment, 
-            manifest_name=manifest_name, 
-            manifest_path=manifest_path, 
-            extension=extension
+            environment=environment,
+            manifest_name=manifest_name,
+            manifest_path=manifest_path,
+            extension=extension,
         )
 
         log = logging.getLogger(app_name)

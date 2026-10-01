@@ -1,6 +1,5 @@
 import argparse
 import logging
-import os
 from argparse import Namespace
 
 from .manifest_build import Manifest
@@ -8,22 +7,12 @@ from .manifest_build._environment import Environment
 from .manifest_build.logging_config import app_name
 
 
-def get_src_path() -> str:
-    deployment_root = "/Workspace/data_pipelines/sql_build/files"
-    src = "src"
-    path = os.getcwd()
-    path = f"{path}/{src}"
-    if not os.path.isdir(path):
-        path = f"{deployment_root}/{src}"
-    if not os.path.isdir(path):
-        raise ValueError(f"Cannot resolve path to sql source files. Path doesn't exist {path}")
-
-
 def parse_argument_bool(args: Namespace, value: bool | str | None, default: bool | None = None) -> Namespace:
 
+    args = args[0]
     if isinstance(value, bool):
         return value
-    
+
     if value is None:
         value = args.name
         if isinstance(value, list):
@@ -45,6 +34,8 @@ def parse_argument_bool(args: Namespace, value: bool | str | None, default: bool
 
 def parse_argument_string(args: Namespace, value: str | None) -> Namespace:
 
+    args = args[0]
+
     if isinstance(value, str):
         value = value.strip()
         return value
@@ -63,25 +54,26 @@ def parse_argument_string(args: Namespace, value: str | None) -> Namespace:
     return value
 
 
-# def parse_argument_environment(args: Namespace, value: str | None) -> Namespace:
-#     log = logging.getLogger(app_name)
-#     if value is None:
-#         value = args.name
-#         if isinstance(value, list):
-#             value = value[0]
+def parse_argument_environment(args: Namespace, value: str | None) -> Namespace:
+    log = logging.getLogger(app_name)
+    if value is None:
+        value = args.name
+        if isinstance(value, list):
+            value = value[0]
 
-#     if value is None:
-#         raise ValueError(f"Argument '{args.name}' is required.")
+    if value is None:
+        raise ValueError(f"Argument '{args.name}' is required.")
 
-#     try:
-#         value = Environment(value)
-#     except Exception:
-#         exception_msg = f"Argument '{args.name}' must be a valid environment. Received value: {value}"
-#         raise ValueError(exception_msg)
+    try:
+        value = Environment(value)
+    except Exception:
+        exception_msg = f"Argument '{args.name}' must be a valid environment. Received value: {value}"
+        raise ValueError(exception_msg)
 
-#     return value
+    return value
 
-def parse_catalog_name(args: Namespace, component_name: str,  catalog: str | None):
+
+def parse_catalog_name(args: Namespace, component_name: str, catalog: str | None):
     if catalog is None:
         catalog = args.catalog
         if isinstance(catalog, list):
@@ -93,7 +85,7 @@ def parse_catalog_name(args: Namespace, component_name: str,  catalog: str | Non
     envs = ",".join([e.value for e in Environment])
     exception_msg = f"catalog={catalog} must be a 2 or 3 part name. the prefix must be a valid environment of {envs}. The 2nd part must be the name `{component_name}`. The postfix is optional."
 
-    if not name_parts or len(name_parts) not in (2,3):
+    if not name_parts or len(name_parts) not in (2, 3):
         raise ValueError(exception_msg)
 
     try:
@@ -109,13 +101,14 @@ def parse_catalog_name(args: Namespace, component_name: str,  catalog: str | Non
 
     return environment, catalog
 
+
 def build_manifest(
-    catalog: str|None = None,
-    component: str|None = None,
-    manifest: str|None = None,
-    group: str|None = None,
-    manifest_path: str|None = None,
-    root_path: str|None = None,
+    catalog: str | None = None,
+    component: str | None = None,
+    manifest: str | None = None,
+    group: str | None = None,
+    manifest_path: str | None = None,
+    root_path: str | None = None,
     dry_run: bool = False,
 ):
 
@@ -135,8 +128,7 @@ def build_manifest(
     MANIFEST_EXT = "yml"
 
     catalog = parse_argument_string(args, catalog)
-    
-    
+
     environment, catalog = parse_catalog_name(args, component, catalog)
 
     component = parse_argument_string(args, component)
