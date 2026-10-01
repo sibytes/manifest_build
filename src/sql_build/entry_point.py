@@ -1,10 +1,23 @@
-import logging
 import argparse
-from databricks.sdk.runtime import spark
+import logging
+import os
 from argparse import Namespace
-from .manifest_build.logging_config import app_name
+
 from .manifest_build import Manifest
 from .manifest_build._environment import Environment
+from .manifest_build.logging_config import app_name
+
+
+def get_src_path() -> str:
+    deployment_root = "/Workspace/data_pipelines/sql_build/files"
+    src = "src"
+    path = os.getcwd()
+    path = f"{path}/{src}"
+    if not os.path.isdir(path):
+        path = f"{deployment_root}/{src}"
+    if not os.path.isdir(path):
+        raise Exception(f"Cannot resolve path to sql source files. Path doesn't exist {path}")
+
 
 def parse_argument_bool(args:Namespace, value:bool|str|None) -> Namespace:
 

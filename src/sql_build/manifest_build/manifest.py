@@ -1,20 +1,23 @@
-import logging
-import yaml
-from ._environment import Environment
-from dataclasses import dataclass, field
-from .logging_config import app_name
-import os
 import glob
+import logging
+import os
+from dataclasses import dataclass, field
 from enum import Enum
+
 import jinja2
+import yaml
 from databricks.sdk.runtime import spark
+
+from ._environment import Environment
+from .logging_config import app_name
+
 
 class Variable(Enum):
     catalog = "catalog"
     environment = "environment"
 
 @dataclass
-class Script():
+class Script:
     file:str
     variables:dict[Variable, str]
     catalog:str
@@ -80,13 +83,13 @@ class Script():
         return data
 
 @dataclass
-class Group():
+class Group:
     group:str
     scripts:list[Script]
     execution_order:int
 
 @dataclass
-class ScriptError():
+class ScriptError:
     group:str
     file:str
     error:str
@@ -95,7 +98,7 @@ class ScriptError():
         return f"Group: {self.group}, File: {self.file}, Error: {self.error}"
 
 @dataclass
-class Manifest():
+class Manifest:
     
     manifest_file:str
     manifest:dict
