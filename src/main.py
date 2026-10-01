@@ -7,5 +7,5 @@ build_manifest(
     group="",
     manifest_path="./ci/sql_build",
     root_path="/Users/shaunryan/dev/databricks/sql_build",
-    dry_run=False
+    dry_run=False,
 )

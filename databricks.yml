@@ -30,7 +30,6 @@ targets:
       host: https://adb-8723178682651460.0.azuredatabricks.net
     variables:
       catalog: dev_unified
-      schema: ${workspace.current_user.short_name}
       
   prod:
     mode: production
@@ -40,7 +39,6 @@ targets:
       root_path: /Workspace/Users/shaun.ryan@shaunchiburihotmail.onmicrosoft.com/.bundle/${bundle.name}/${bundle.target}
     variables:
       catalog: dev_unified
-      schema: prod
     permissions:
       - user_name: shaun.ryan@shaunchiburihotmail.onmicrosoft.com
         level: CAN_MANAGE

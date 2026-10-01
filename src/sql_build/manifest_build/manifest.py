@@ -8,7 +8,7 @@ import yaml
 from databricks.sdk.runtime import spark
 
 from ._environment import Environment
-from .exception import CatalogNameError, SqlBuildError
+from .exception import SqlBuildCatalogNameError, SqlBuildError
 from .logging_config import app_name
 
 
@@ -37,10 +37,10 @@ class Script:
 
     def run(self, dry_run: bool = False):
         log = logging.getLogger(app_name)
-        log.info(f"Running script {self.file}")
+        log.info(f"{self.catalog}: Running script on {self.file}")
         if self.use_catalog:
             use_sql = f"USE CATALOG {self.catalog}"
-            log.info(use_sql)
+            log.debug(use_sql)
             if not dry_run:
                 try:
                     spark.sql(use_sql)
@@ -51,7 +51,7 @@ class Script:
         sql_commands = [s.strip() for s in self.sql.split(";")]
         for sql_command in sql_commands:
             if sql_command:
-                log.info(f"Running SQL command: {sql_command}")
+                log.debug(f"Running SQL command: {sql_command}")
                 if not dry_run:
                     try:
                         spark.sql(sql_command)
@@ -66,7 +66,7 @@ class Script:
 
     def render_jinja(self, data: str, replacements: dict[Variable, str]) -> str:
         log = logging.getLogger(app_name)
-        log.info(f"Rendering jinja for script {data} with replacements {replacements}")
+        log.debug(f"Rendering jinja for script {data} with replacements {replacements}")
         if data and isinstance(data, str):
             replace = {k.value: v for (k, v) in replacements.items()}
             skip = False
@@ -77,7 +77,7 @@ class Script:
             if not skip:
                 template: jinja2.Template = jinja2.Template(data)
                 data = template.render(replace)
-        log.info(f"Rendered jinja for script {data}")
+        log.debug(f"Rendered jinja for script {data}")
         return data
 
 
@@ -139,21 +139,22 @@ class Manifest:
         self.groups = []
 
         if isinstance(group, str) and group == "":
-            for group, data in self.manifest["manifest"].items():
-                if group in ["name", "catalog_name", "sql_project_root"]:
+            for grp, data in self.manifest["manifest"].items():
+                if grp in ["name", "catalog_name", "sql_project_root"]:
                     continue
 
                 try:
                     execution_order: int = int(data.get("execution_order", 0))
                 except (ValueError, TypeError):
                     execution_order = 0
-                    warning_msg = f"Warning loading manifest file {self.manifest_file}: integerexecution_order for group {group} is not defined"
+                    warning_msg = f"Warning loading manifest file {self.manifest_file}: integerexecution_order for group {grp} is not defined"
                     raise Warning(warning_msg)
 
                 self.groups.append(
-                    Group(group=group, scripts=self._load_group_script(group), execution_order=execution_order)
+                    Group(group=grp, scripts=self._load_group_script(grp), execution_order=execution_order)
                 )
-            self.groups.sort(key=lambda group: group.execution_order)
+            self.groups.sort(key=lambda grp: grp.execution_order)
+
         elif isinstance(group, str) and group != "":
             self.groups.append(Group(group=group, scripts=self._load_group_script(group), execution_order=0))
         elif isinstance(group, list):
@@ -223,24 +224,24 @@ class Manifest:
         envs = ",".join([e.value for e in Environment])
         exception_msg = f"catalog={catalog} must be a 2 or 3 part name. The prefix must be a valid environment ({envs}). The second part must be the name {component}. The suffix can be any name. Examples: dev_{component}, dev_{component}_test, tst_{component}"
         if not name_parts or len(name_parts) not in [2, 3]:
-            raise CatalogNameError(exception_msg)
+            raise SqlBuildCatalogNameError(exception_msg)
 
         try:
             catalog_environment = Environment(name_parts[0])
         except (IndexError, ValueError):
-            raise CatalogNameError(exception_msg)
+            raise SqlBuildCatalogNameError(exception_msg)
 
         if catalog_environment != environment:
             exception_msg = (
                 f"Catalog environment {catalog_environment} does not match manifest environment {environment}"
             )
-            raise CatalogNameError(exception_msg)
+            raise SqlBuildCatalogNameError(exception_msg)
 
         try:
             if name_parts[1] != component:
-                raise CatalogNameError(exception_msg)
+                raise SqlBuildCatalogNameError(exception_msg)
         except IndexError:
-            raise CatalogNameError(exception_msg)
+            raise SqlBuildCatalogNameError(exception_msg)
 
     @classmethod
     def _collect_manifest(

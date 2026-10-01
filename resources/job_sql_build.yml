@@ -11,11 +11,11 @@ resources:
       #    - your_email@example.com
 
       parameters:
-        - name: manifest_name
+        - name: manifest
           default: dev_unified.audit_full_rebuild
         - name: catalog
           default: ${var.catalog}
-        - name: dry_run
+        - name: dry-run
           default: "False"
         - name: group
           default: ""
@@ -26,9 +26,9 @@ resources:
             package_name: sql_build
             entry_point: sql_build_build_manifest
             named_parameters:
-              component_name: unified
-              manifest_path: ./ci/sql_build
-              root_path: ${workspace.root_path}/files
+              component: unified
+              manifest-path: ./ci/sql_build
+              root-path: ${workspace.root_path}/files
           environment_key: default
 
       environments:

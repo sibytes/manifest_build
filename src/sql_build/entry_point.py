@@ -1,100 +1,13 @@
 import argparse
 import logging
-from argparse import Namespace
 
-from .manifest_build import Environment, Manifest, app_name
-
-
-def parse_argument_bool(args: Namespace, value: bool | str | None, default: bool | None = None) -> Namespace:
-    args = args[0]
-    if isinstance(value, bool):
-        return value
-
-    if value is None:
-        value = args.name
-        if isinstance(value, list):
-            value = value[0]
-
-    if value is None:
-        if not isinstance(default, bool):
-            raise ValueError(f"Argument '{args.name}' is required unless a default value of type bool is provided.")
-        else:
-            value = default
-
-    if isinstance(value, str):
-        if value.lower() not in ["true", "false"]:
-            raise ValueError(f"Argument '{args.name}' must be a boolean value (true/false). Received value: {value}")
-        value = value.lower() == "true"
-
-    return value
-
-
-def parse_argument_string(args: Namespace, value: str | None) -> Namespace:
-    args = args[0]
-
-    if isinstance(value, str):
-        value = value.strip()
-        return value
-
-    if value is None:
-        value = args.name
-        if isinstance(value, list):
-            value = value[0]
-
-    if value is None:
-        if not isinstance(value, str):
-            raise ValueError(f"Argument '{args.name}' is required unless a default value of type str is provided.")
-        else:
-            value = value.strip()
-
-    return value
-
-
-def parse_argument_environment(args: Namespace, value: str | None) -> Namespace:
-    if value is None:
-        value = args.name
-        if isinstance(value, list):
-            value = value[0]
-
-    if value is None:
-        raise ValueError(f"Argument '{args.name}' is required.")
-
-    try:
-        value = Environment(value)
-    except Exception:
-        exception_msg = f"Argument '{args.name}' must be a valid environment. Received value: {value}"
-        raise ValueError(exception_msg)
-
-    return value
-
-
-def parse_catalog_name(args: Namespace, component_name: str, catalog: str | None):
-    if catalog is None:
-        catalog = args.catalog
-        if isinstance(catalog, list):
-            catalog = catalog[0]
-    if not isinstance(catalog, str):
-        raise TypeError("Argument 'catalog' of type string is required.")
-
-    name_parts = catalog.split("_")
-    envs = ",".join([e.value for e in Environment])
-    exception_msg = f"catalog={catalog} must be a 2 or 3 part name. the prefix must be a valid environment of {envs}. The 2nd part must be the name `{component_name}`. The postfix is optional."
-
-    if not name_parts or len(name_parts) not in (2, 3):
-        raise ValueError(exception_msg)
-
-    try:
-        environment = Environment(name_parts[0])
-    except (ValueError, IndexError):
-        raise ValueError(exception_msg)
-
-    try:
-        if name_parts[1] != component_name:
-            raise ValueError(exception_msg)
-    except IndexError:
-        raise ValueError(exception_msg)
-
-    return environment, catalog
+from .manifest_build import (
+    Manifest,
+    app_name,
+    parse_argument_bool,
+    parse_argument_catalog_name,
+    parse_argument_string,
+)
 
 
 def build_manifest(
@@ -121,16 +34,13 @@ def build_manifest(
 
     MANIFEST_EXT = "yml"
 
-    catalog = parse_argument_string(args, catalog)
-
-    environment, catalog = parse_catalog_name(args, component, catalog)
-
-    component = parse_argument_string(args, component)
-    manifest = parse_argument_string(args, manifest)
-    manifest_path = parse_argument_string(args, manifest_path)
-    root_path = parse_argument_string(args, root_path)
-    group = parse_argument_string(args, group)
-    dry_run = parse_argument_bool(args, dry_run)
+    component = parse_argument_string(args, "component", component)
+    environment, catalog = parse_argument_catalog_name(args, component, catalog)
+    manifest = parse_argument_string(args, "manifest", manifest)
+    manifest_path = parse_argument_string(args, "manifest_path", manifest_path)
+    root_path = parse_argument_string(args, "root_path", root_path)
+    group = parse_argument_string(args, "group", group)
+    dry_run = parse_argument_bool(args, "dry_run", dry_run)
 
     Manifest.build_manifest(
         catalog=catalog,

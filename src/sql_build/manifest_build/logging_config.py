@@ -2,7 +2,7 @@ import logging
 import os
 
 app_name = "manifest_build"
-_log_level = os.getenv("LOG_LEVEL", "INFO")
+_log_level = os.getenv("LOG_LEVEL", "DEBUG")
 
 console_handler = logging.StreamHandler()
 console_handler.setLevel(_log_level)
