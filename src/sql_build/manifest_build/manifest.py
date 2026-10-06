@@ -48,7 +48,11 @@ class Script:
                     self.succeeded = False
                     self.error = str(e).split("\n")[0]
 
-        sql_commands = [s.strip() for s in self.sql.split(";")]
+        sql_commands = [self.sql]
+        if self.sql.strip().startswith("--!script"):
+            sql = self.sql.replace("--!script;", "")
+            sql_commands = [s.strip() for s in sql.split(";")]
+
         for sql_command in sql_commands:
             if sql_command:
                 log.debug(f"Running SQL command: {sql_command}")
@@ -60,6 +64,7 @@ class Script:
                         self.error = str(e)
                         self.error = self.error.split("JVM stacktrace", maxsplit=1)[0]
                         self.error = self.error.strip()
+                        log.error(self.error)
                         break
 
                     self.succeeded = True
@@ -136,6 +141,7 @@ class Manifest:
             raise SqlBuildError(error_msg)
 
         self.sql_project_root = self.root_path + "/" + self.sql_project_root
+        log.info(f"Project root path: {self.sql_project_root}")
         self.groups = []
 
         if isinstance(group, str) and group == "":
@@ -147,7 +153,7 @@ class Manifest:
                     execution_order: int = int(data.get("execution_order", 0))
                 except (ValueError, TypeError):
                     execution_order = 0
-                    warning_msg = f"Warning loading manifest file {self.manifest_file}: integerexecution_order for group {grp} is not defined"
+                    warning_msg = f"Warning loading manifest file {self.manifest_file}: integer execution_order for group {grp} is not defined"
                     raise Warning(warning_msg)
 
                 self.groups.append(
