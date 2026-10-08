@@ -6,7 +6,7 @@ manifest:
   pre_build:
     execution_order: 2
     scripts:
-      - pre_build/drop_audit_tables.sql
+      - audit/scripts/*.sql
 
   catalog:
     execution_order: 0

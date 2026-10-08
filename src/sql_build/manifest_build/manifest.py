@@ -1,4 +1,5 @@
 import glob
+import json
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
@@ -8,24 +9,24 @@ import yaml
 from databricks.sdk.runtime import spark
 
 from ._environment import Environment
-from .exception import SqlBuildCatalogNameError, SqlBuildError
+from .exception import SqlBuildCatalogNameError, SqlBuildError, SqlBuildParseError, SqlBuildRuntimeError
 from .logging_config import app_name
 
 
 class Variable(Enum):
     catalog = "catalog"
     environment = "environment"
-
-
 @dataclass
 class Script:
     file: str
     variables: dict[Variable, str]
     catalog: str
     use_catalog: bool
+    enable_parse: bool
     sql: str | None = field(default=None)
     error: str | None = field(default=None)
     succeeded: bool = field(default=False)
+    parse_errors: list[SqlBuildParseError] | None = field(default=None)
 
     def __post_init__(self):
         log = logging.getLogger(app_name)
@@ -34,6 +35,28 @@ class Script:
             self.sql = f.read()
 
         self.sql = self.render_jinja(self.sql, self.variables)
+        self.parse_errors = self._parse_sql(self.sql)
+
+    def _parse_sql(self, sql: str):
+
+        log = logging.getLogger(app_name)
+        log.info(f"Parsing script {self.file}")
+        parse_result = spark.sql(
+            """
+            select parse_sql({sql}) as result
+        """,
+            sql=sql,
+        )
+        result = parse_result.collect()[0]["result"]
+        statements: list = json.loads(result)
+        parse_errors: list[SqlBuildParseError] = []
+
+        for statement in statements:
+            parse_success: bool = statement["parse_success"]
+            if not parse_success:
+                parse_errors.append(SqlBuildParseError(parse_error=statement, file=self.file, sql=sql))
+
+        return parse_errors
 
     def run(self, dry_run: bool = False):
         log = logging.getLogger(app_name)
@@ -85,23 +108,22 @@ class Script:
         log.debug(f"Rendered jinja for script {data}")
         return data
 
-
 @dataclass
 class Group:
     group: str
     scripts: list[Script]
     execution_order: int
 
+    def get_parse_errors(self):
+        parse_errors:list[SqlBuildParseError] = []
+        for script in self.scripts:
+            if script.parse_errors:
+                parse_errors.extend(script.parse_errors)
 
-@dataclass
-class ScriptError:
-    group: str
-    file: str
-    error: str
-
-    def __str__(self):
-        return f"Group: {self.group}, File: {self.file}, Error: {self.error}"
-
+        if parse_errors:
+            return parse_errors
+        else:
+            return None
 
 @dataclass
 class Manifest:
@@ -113,7 +135,9 @@ class Manifest:
     environment: Environment
     sql_project_root: str | None = field(default=None)
     groups: list[Group] = field(default=None)
-    errors: list[ScriptError] | None = field(default=None)
+    runtime_errors: list[SqlBuildRuntimeError] | None = field(default=None)
+    parse_errors: list[SqlBuildParseError] | None = field(default=None)
+    enable_parse: bool | None = field(default=True)
 
     def load(self, group: str | list[str] = ""):
         log = logging.getLogger(app_name)
@@ -142,7 +166,7 @@ class Manifest:
 
         self.sql_project_root = self.root_path + "/" + self.sql_project_root
         log.info(f"Project root path: {self.sql_project_root}")
-        self.groups = []
+        self.groups:list[Group] = []
 
         if isinstance(group, str) and group == "":
             for grp, data in self.manifest["manifest"].items():
@@ -173,6 +197,16 @@ class Manifest:
             error_msg = f"Invalid group type {type(group)} for group {group} in manifest {self.manifest_file}"
             raise SqlBuildError(error_msg)
 
+        self._collect_parse_errors()
+
+    def _collect_parse_errors(self):
+        self.parse_errors = []
+        for grp in self.groups:
+            grp_parse_errors = grp.get_parse_errors()
+            if grp_parse_errors:
+                self.parse_errors.extend(grp_parse_errors)
+
+
     def _load_group_script(self, group: str):
         log = logging.getLogger(app_name)
         scripts: list[Script] = []
@@ -197,29 +231,39 @@ class Manifest:
                     use_catalog=group != "catalog",
                     file=file,
                     variables={Variable.catalog: self.catalog, Variable.environment: self.environment.value},
+                    enable_parse=self.enable_parse,
                 )
                 scripts.append(script)
 
         return scripts
 
     def run(self, dry_run: bool = False):
-        self.errors = {}
+        self.runtime_errors = []
         for group in self.groups:
             log = logging.getLogger(app_name)
             log.info(f"Running group {group.group} with execution order {group.execution_order}")
             for script in group.scripts:
                 script.run(dry_run=dry_run)
                 if not script.succeeded:
-                    self.errors.append(ScriptError(group=group.group, file=script.file, error=script.error))
+                    self.runtime_errors.append(SqlBuildRuntimeError(group=group.group, file=script.file, error=script.error))
 
-    def raise_errors(self, log_and_continue: bool = False):
+    def raise_runtime_errors(self, log_and_continue: bool = False):
         log = logging.getLogger(app_name)
-        if self.errors:
-            error_messages = "\n".join([str(error) for error in self.errors])
+        if self.runtime_errors:
+            error_messages = "\n".join([error.message for error in self.runtime_errors])
             if log_and_continue:
                 log.error(f"Errors occurred while running manifest {self.manifest_file}:\n{error_messages}")
             else:
                 raise SqlBuildError(f"Errors occurred while running manifest {self.manifest_file}:\n{error_messages}")
+
+    def raise_parse_errors(self, log_and_continue: bool = False):
+        log = logging.getLogger(app_name)
+        if self.parse_errors:
+            error_messages = "\n".join([error.message for error in self.parse_errors])
+            if log_and_continue:
+                log.error(f"Errors occurred while parsing manifest {self.manifest_file}:\n{error_messages}")
+            else:
+                raise SqlBuildError(f"Errors occurred while parsing manifest {self.manifest_file}:\n{error_messages}")
 
     @classmethod
     def validate_catalog_name(cls, catalog: str, component: str, environment: Environment) -> str:
@@ -248,6 +292,7 @@ class Manifest:
                 raise SqlBuildCatalogNameError(exception_msg)
         except IndexError:
             raise SqlBuildCatalogNameError(exception_msg)
+        
 
     @classmethod
     def _collect_manifest(
@@ -259,7 +304,9 @@ class Manifest:
         manifest_name: str,
         manifest_path: str,
         extension: str,
+        enable_parse: bool,
     ) -> dict:
+
         log = logging.getLogger(app_name)
         manifest_file = f"{root_path}/{manifest_path}/{environment.name}/{manifest_name}.{extension}"
         log.info(f"Collecting manifest from {manifest_file}")
@@ -274,6 +321,7 @@ class Manifest:
             environment=environment,
             manifest_file=manifest_file,
             manifest=manifest,
+            enable_parse=enable_parse,
         )
 
         return manifest
@@ -290,6 +338,7 @@ class Manifest:
         group: str | list[str] = "",
         dry_run: bool = False,
         extension: str = "yml",
+        enable_parse: bool = True,
     ) -> dict:
         manifest: Manifest = cls._collect_manifest(
             catalog=catalog,
@@ -299,6 +348,7 @@ class Manifest:
             manifest_name=manifest_name,
             manifest_path=manifest_path,
             extension=extension,
+            enable_parse=enable_parse,
         )
 
         log = logging.getLogger(app_name)
@@ -306,9 +356,11 @@ class Manifest:
         log.info(f"Loading manifest for group {group}")
         manifest.load(group=group)
 
+        manifest.raise_parse_errors()
+
         log.info(f"Running manifest for group {group}")
         manifest.run(dry_run=dry_run)
 
-        manifest.raise_errors()
+        manifest.raise_runtime_errors()
 
         return manifest
