@@ -9,7 +9,6 @@ from .logging_config import app_name
 def parse_argument_bool(
     args: Namespace | tuple, name: str, value: bool | str | None, default: bool | None = None
 ) -> bool:
-
     log = logging.getLogger(app_name)
 
     if isinstance(args, tuple):
@@ -46,7 +45,6 @@ def parse_argument_bool(
 
 
 def parse_argument_string(args: Namespace | tuple, name: str, value: str | None, default: str | None = None) -> str:
-
     log = logging.getLogger(app_name)
 
     if isinstance(args, tuple):
@@ -77,7 +75,6 @@ def parse_argument_string(args: Namespace | tuple, name: str, value: str | None,
 
 
 def parse_argument_environment(args: Namespace | tuple, name: str, value: str | None) -> Namespace:
-
     log = logging.getLogger(app_name)
 
     if isinstance(args, tuple):

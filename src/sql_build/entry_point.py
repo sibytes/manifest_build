@@ -45,15 +45,16 @@ def build_manifest(
     enable_parse = parse_argument_bool(args, "enable_pase", enable_parse)
     dry_run = parse_argument_bool(args, "dry_run", dry_run)
 
-    Manifest.build_manifest(
+    manifest: Manifest = Manifest.collect_manifest(
         catalog=catalog,
-        environment=environment,
         component=component,
-        manifest_name=manifest,
-        group=group,
-        manifest_path=manifest_path,
         root_path=root_path,
-        dry_run=dry_run,
-        enable_parse=enable_parse,
+        environment=environment,
+        manifest=manifest,
+        manifest_path=manifest_path,
         extension=MANIFEST_EXT,
+        enable_parse=enable_parse,
     )
+
+    manifest.parse(group=group)
+    manifest.run(dry_run=dry_run)

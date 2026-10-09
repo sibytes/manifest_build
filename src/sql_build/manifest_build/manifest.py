@@ -16,6 +16,8 @@ from .logging_config import app_name
 class Variable(Enum):
     catalog = "catalog"
     environment = "environment"
+
+
 @dataclass
 class Script:
     file: str
@@ -38,7 +40,6 @@ class Script:
         self.parse_errors = self._parse_sql(self.sql)
 
     def _parse_sql(self, sql: str):
-
         log = logging.getLogger(app_name)
         log.info(f"Parsing script {self.file}")
         parse_result = spark.sql(
@@ -108,6 +109,7 @@ class Script:
         log.debug(f"Rendered jinja for script {data}")
         return data
 
+
 @dataclass
 class Group:
     group: str
@@ -115,7 +117,7 @@ class Group:
     execution_order: int
 
     def get_parse_errors(self):
-        parse_errors:list[SqlBuildParseError] = []
+        parse_errors: list[SqlBuildParseError] = []
         for script in self.scripts:
             if script.parse_errors:
                 parse_errors.extend(script.parse_errors)
@@ -124,6 +126,7 @@ class Group:
             return parse_errors
         else:
             return None
+
 
 @dataclass
 class Manifest:
@@ -139,8 +142,9 @@ class Manifest:
     parse_errors: list[SqlBuildParseError] | None = field(default=None)
     enable_parse: bool | None = field(default=True)
 
-    def load(self, group: str | list[str] = ""):
+    def parse(self, group: str | list[str] = ""):
         log = logging.getLogger(app_name)
+        log.info(f"Loading manifest for group {group}")
 
         try:
             manifest_catalog = self.manifest["manifest"]["catalog_name"]
@@ -166,7 +170,7 @@ class Manifest:
 
         self.sql_project_root = self.root_path + "/" + self.sql_project_root
         log.info(f"Project root path: {self.sql_project_root}")
-        self.groups:list[Group] = []
+        self.groups: list[Group] = []
 
         if isinstance(group, str) and group == "":
             for grp, data in self.manifest["manifest"].items():
@@ -198,6 +202,7 @@ class Manifest:
             raise SqlBuildError(error_msg)
 
         self._collect_parse_errors()
+        self.raise_parse_errors()
 
     def _collect_parse_errors(self):
         self.parse_errors = []
@@ -205,7 +210,6 @@ class Manifest:
             grp_parse_errors = grp.get_parse_errors()
             if grp_parse_errors:
                 self.parse_errors.extend(grp_parse_errors)
-
 
     def _load_group_script(self, group: str):
         log = logging.getLogger(app_name)
@@ -238,14 +242,18 @@ class Manifest:
         return scripts
 
     def run(self, dry_run: bool = False):
+        log = logging.getLogger(app_name)
+        log.info(f"Running manifest for group {self.manifest}")
         self.runtime_errors = []
         for group in self.groups:
-            log = logging.getLogger(app_name)
             log.info(f"Running group {group.group} with execution order {group.execution_order}")
             for script in group.scripts:
                 script.run(dry_run=dry_run)
                 if not script.succeeded:
-                    self.runtime_errors.append(SqlBuildRuntimeError(group=group.group, file=script.file, error=script.error))
+                    self.runtime_errors.append(
+                        SqlBuildRuntimeError(group=group.group, file=script.file, error=script.error)
+                    )
+        self.raise_runtime_errors()
 
     def raise_runtime_errors(self, log_and_continue: bool = False):
         log = logging.getLogger(app_name)
@@ -292,23 +300,22 @@ class Manifest:
                 raise SqlBuildCatalogNameError(exception_msg)
         except IndexError:
             raise SqlBuildCatalogNameError(exception_msg)
-        
 
     @classmethod
-    def _collect_manifest(
+    def collect_manifest(
         cls,
         catalog: str,
         component: str,
         root_path: str,
         environment: Environment,
-        manifest_name: str,
+        manifest: str,
         manifest_path: str,
         extension: str,
         enable_parse: bool,
     ) -> dict:
-
+        
         log = logging.getLogger(app_name)
-        manifest_file = f"{root_path}/{manifest_path}/{environment.name}/{manifest_name}.{extension}"
+        manifest_file = f"{root_path}/{manifest_path}/{environment.name}/{manifest}.{extension}"
         log.info(f"Collecting manifest from {manifest_file}")
 
         with open(manifest_file, "r") as f:
@@ -323,44 +330,5 @@ class Manifest:
             manifest=manifest,
             enable_parse=enable_parse,
         )
-
-        return manifest
-
-    @classmethod
-    def build_manifest(
-        cls,
-        catalog: str,
-        environment: Environment,
-        component: str,
-        manifest_name: str,
-        manifest_path: str,
-        root_path: str,
-        group: str | list[str] = "",
-        dry_run: bool = False,
-        extension: str = "yml",
-        enable_parse: bool = True,
-    ) -> dict:
-        manifest: Manifest = cls._collect_manifest(
-            catalog=catalog,
-            component=component,
-            root_path=root_path,
-            environment=environment,
-            manifest_name=manifest_name,
-            manifest_path=manifest_path,
-            extension=extension,
-            enable_parse=enable_parse,
-        )
-
-        log = logging.getLogger(app_name)
-
-        log.info(f"Loading manifest for group {group}")
-        manifest.load(group=group)
-
-        manifest.raise_parse_errors()
-
-        log.info(f"Running manifest for group {group}")
-        manifest.run(dry_run=dry_run)
-
-        manifest.raise_runtime_errors()
 
         return manifest
