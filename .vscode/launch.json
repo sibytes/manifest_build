@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Run on Databricks",
             "program": "${file}",
-            "args": ["--catalog", "prd_unified"]
+            "args": ["--catalog", "dev_sql_build"]
         }
     ]
 }

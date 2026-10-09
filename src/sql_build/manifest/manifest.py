@@ -3,13 +3,14 @@ import json
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Final
 
 import jinja2
 import yaml
 from databricks.sdk.runtime import spark
 
 from ._environment import Environment
-from .exception import SqlBuildCatalogNameError, SqlBuildError, SqlBuildParseError, SqlBuildRuntimeError
+from .exception import SqlBuildError, SqlBuildParameterError, SqlBuildParseError, SqlBuildRuntimeError
 from .logging_config import app_name
 
 
@@ -129,6 +130,17 @@ class Group:
 
 
 @dataclass
+class Options:
+    allow_drop_tables: bool
+    allow_drop_catalogs: bool
+
+    def __str__(self):
+        values = [f"\n\t{a}: {v}" for a, v in self.__dict__.items()]
+        values = "".join(values)
+        return f"Manifest options:{values}"
+
+
+@dataclass
 class Manifest:
     catalog: str
     component: str
@@ -141,11 +153,22 @@ class Manifest:
     runtime_errors: list[SqlBuildRuntimeError] | None = field(default=None)
     parse_errors: list[SqlBuildParseError] | None = field(default=None)
     enable_parse: bool | None = field(default=True)
+    options: Options | None = field(default=None)
+    _HEADERS: Final[tuple[str, ...]] = ("name", "sql_project_root", "catalog_name", "options")
 
     def parse(self, group: str | list[str] = ""):
         log = logging.getLogger(app_name)
         log.info(f"Loading manifest for group {group}")
 
+        self._set_header()
+        self._set_options()
+        self._set_groups(group)
+        self._collect_parse_errors()
+        self.raise_parse_errors()
+
+    def _set_header(self):
+
+        log = logging.getLogger(app_name)
         try:
             manifest_catalog = self.manifest["manifest"]["catalog_name"]
         except KeyError as e:
@@ -170,11 +193,35 @@ class Manifest:
 
         self.sql_project_root = self.root_path + "/" + self.sql_project_root
         log.info(f"Project root path: {self.sql_project_root}")
-        self.groups: list[Group] = []
 
+    def _set_options(self):
+        log = logging.getLogger(app_name)
+
+        allow_drop_tables = False
+        allow_drop_catalogs = False
+
+        try:
+            options: dict[str, bool] = self.manifest["manifest"]["options"]
+            allow_drop_catalogs = options.get("allow_drop_tables", allow_drop_catalogs)
+            allow_drop_tables = options.get("allow_drop_tables", allow_drop_tables)
+
+        except (ValueError, TypeError):
+            log.warning(
+                """Failed to find options in manifest header at manifest.options. Applying non-destructive default options:
+                \tallow_drop_catalogs: False
+                \tallow_drop_tables: False"""
+            )
+            allow_drop_tables = False
+            allow_drop_catalogs = False
+
+        self.options = Options(allow_drop_catalogs=allow_drop_catalogs, allow_drop_tables=allow_drop_tables)
+        log.info(str(self.options))
+
+    def _set_groups(self, group: str):
+        self.groups: list[Group] = []
         if isinstance(group, str) and group == "":
             for grp, data in self.manifest["manifest"].items():
-                if grp in ["name", "catalog_name", "sql_project_root"]:
+                if grp in self._HEADERS:
                     continue
 
                 try:
@@ -200,9 +247,6 @@ class Manifest:
         else:
             error_msg = f"Invalid group type {type(group)} for group {group} in manifest {self.manifest_file}"
             raise SqlBuildError(error_msg)
-
-        self._collect_parse_errors()
-        self.raise_parse_errors()
 
     def _collect_parse_errors(self):
         self.parse_errors = []
@@ -274,35 +318,39 @@ class Manifest:
                 raise SqlBuildError(f"Errors occurred while parsing manifest {self.manifest_file}:\n{error_messages}")
 
     @classmethod
-    def validate_catalog_name(cls, catalog: str, component: str, environment: Environment) -> str:
+    def validate_catalog_name(cls, catalog: str, component: str, environment: Environment = None):
         log = logging.getLogger(app_name)
         log.info(f"Validating catalog name {catalog}, component {component}, environment {environment}")
 
-        name_parts = catalog.split("_")
+        name_parts = catalog.split(component)
         envs = ",".join([e.value for e in Environment])
-        exception_msg = f"catalog={catalog} must be a 2 or 3 part name. The prefix must be a valid environment ({envs}). The second part must be the name {component}. The suffix can be any name. Examples: dev_{component}, dev_{component}_test, tst_{component}"
-        if not name_parts or len(name_parts) not in [2, 3]:
-            raise SqlBuildCatalogNameError(exception_msg)
+        exception_msg = f"catalog={catalog} must be a 2 or 3 part name. the prefix must be a valid environment of {envs}. The 2nd part must be the name `{component}`. The postfix is optional."
+
+        if not name_parts or len(name_parts) not in (1, 2):
+            raise SqlBuildParameterError(exception_msg)
 
         try:
-            catalog_environment = Environment(name_parts[0])
-        except (IndexError, ValueError):
-            raise SqlBuildCatalogNameError(exception_msg)
+            catalog_environment = name_parts[0].removesuffix("_")
+            catalog_environment = Environment(catalog_environment)
+        except (ValueError, IndexError):
+            raise SqlBuildParameterError(exception_msg)
 
-        if catalog_environment != environment:
-            exception_msg = (
-                f"Catalog environment {catalog_environment} does not match manifest environment {environment}"
+        if environment is not None and catalog_environment != environment:
+            raise SqlBuildParameterError(
+                f"Environment in the catalog name '{catalog_environment.name}' and is not the environment it is being validated against '{environment.name}'"
             )
-            raise SqlBuildCatalogNameError(exception_msg)
 
         try:
-            if name_parts[1] != component:
-                raise SqlBuildCatalogNameError(exception_msg)
+            catalog_component = catalog.removeprefix(name_parts[0]).removesuffix(name_parts[1])
+            if catalog_component != component:
+                raise ValueError(exception_msg)
         except IndexError:
-            raise SqlBuildCatalogNameError(exception_msg)
+            raise SqlBuildParameterError(exception_msg)
+
+        return catalog_environment, catalog
 
     @classmethod
-    def collect_manifest(
+    def load(
         cls,
         catalog: str,
         component: str,
@@ -313,7 +361,7 @@ class Manifest:
         extension: str,
         enable_parse: bool,
     ) -> dict:
-        
+
         log = logging.getLogger(app_name)
         manifest_file = f"{root_path}/{manifest_path}/{environment.name}/{manifest}.{extension}"
         log.info(f"Collecting manifest from {manifest_file}")

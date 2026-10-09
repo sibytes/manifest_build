@@ -29,7 +29,7 @@ targets:
     workspace:
       host: https://adb-8723178682651460.0.azuredatabricks.net
     variables:
-      catalog: dev_unified
+      catalog: dev_sql_build
       
   prod:
     mode: production
@@ -38,7 +38,7 @@ targets:
       # We explicitly deploy to /Workspace/Users/shaun.ryan@shaunchiburihotmail.onmicrosoft.com to make sure we only have a single copy.
       root_path: /Workspace/Users/shaun.ryan@shaunchiburihotmail.onmicrosoft.com/.bundle/${bundle.name}/${bundle.target}
     variables:
-      catalog: dev_unified
+      catalog: dev_sql_build
     permissions:
       - user_name: shaun.ryan@shaunchiburihotmail.onmicrosoft.com
         level: CAN_MANAGE

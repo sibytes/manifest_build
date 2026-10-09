@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from .manifest_build import (
+from .manifest import (
     Manifest,
     app_name,
     parse_argument_bool,
@@ -45,7 +45,7 @@ def build_manifest(
     enable_parse = parse_argument_bool(args, "enable_pase", enable_parse)
     dry_run = parse_argument_bool(args, "dry_run", dry_run)
 
-    manifest: Manifest = Manifest.collect_manifest(
+    manifest: Manifest = Manifest.load(
         catalog=catalog,
         component=component,
         root_path=root_path,

@@ -4,6 +4,7 @@ from argparse import Namespace
 from . import Environment
 from .exception import SqlBuildParameterError
 from .logging_config import app_name
+from .manifest import Manifest
 
 
 def parse_argument_bool(
@@ -120,22 +121,4 @@ def parse_argument_catalog_name(args: Namespace | tuple, component: str, catalog
     if not isinstance(catalog, str):
         raise SqlBuildParameterError("Argument 'catalog' of type string is required.")
 
-    name_parts = catalog.split("_")
-    envs = ",".join([e.value for e in Environment])
-    exception_msg = f"catalog={catalog} must be a 2 or 3 part name. the prefix must be a valid environment of {envs}. The 2nd part must be the name `{component}`. The postfix is optional."
-
-    if not name_parts or len(name_parts) not in (2, 3):
-        raise SqlBuildParameterError(exception_msg)
-
-    try:
-        environment = Environment(name_parts[0])
-    except (ValueError, IndexError):
-        raise SqlBuildParameterError(exception_msg)
-
-    try:
-        if name_parts[1] != component:
-            raise ValueError(exception_msg)
-    except IndexError:
-        raise SqlBuildParameterError(exception_msg)
-
-    return environment, catalog
+    return Manifest.validate_catalog_name(catalog=catalog, component=component)

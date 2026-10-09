@@ -1,7 +1,10 @@
 manifest:
   name: full_rebuild
   sql_project_root: src/sql
-  catalog_name: dev_unified
+  catalog_name: dev_sql_build
+  options:
+    allow_drop_tables: True
+    allow_drop_catalog: True
 
   pre_build:
     execution_order: 2
@@ -11,7 +14,7 @@ manifest:
   catalog:
     execution_order: 0
     scripts:
-      - catalog/unified.sql
+      - catalog/sql_build.sql
 
   schema:
     execution_order: 1

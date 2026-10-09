@@ -12,7 +12,7 @@ resources:
 
       parameters:
         - name: manifest
-          default: dev_unified.audit_full_rebuild
+          default: dev_sql_build.audit_full_rebuild
         - name: catalog
           default: ${var.catalog}
         - name: dry-run
@@ -26,7 +26,7 @@ resources:
             package_name: sql_build
             entry_point: sql_build_build_manifest
             named_parameters:
-              component: unified
+              component: sql_build
               manifest-path: ./ci/sql_build
               root-path: ${workspace.root_path}/files
           environment_key: default
