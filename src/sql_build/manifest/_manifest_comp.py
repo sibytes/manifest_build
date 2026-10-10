@@ -1,6 +1,6 @@
 import glob
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
 from ._script import Script, Variable
@@ -11,12 +11,15 @@ from .logging_config import app_name
 @dataclass
 class Group:
     group: str
-    scripts: dict[UUID, Script]
     execution_order: int
+    scripts: dict[UUID, Script] | None = field(default=None)
+
+    def __post_init__(self):
+        self._load_group_script()
 
     def get_parse_errors(self):
         parse_errors: list[SqlBuildParseError] = []
-        for script in self.scripts:
+        for script in self.scripts.values():
             if script.parse_errors:
                 parse_errors.extend(script.parse_errors)
 
@@ -55,14 +58,3 @@ class Group:
                 )
 
                 self.scripts[key] = script
-
-
-@dataclass
-class Options:
-    allow_drop_tables: bool
-    allow_drop_catalogs: bool
-
-    def __str__(self):
-        values = [f"\n\t{a}: {v}" for a, v in self.__dict__.items()]
-        values = "".join(values)
-        return f"Manifest options:{values}"

@@ -5,10 +5,20 @@ from typing import Final
 import yaml
 
 from ._environment import Environment
-from ._manifest_comp import Group, Options
-from ._script import Script
+from ._manifest_comp import Group
 from .exception import SqlBuildError, SqlBuildParameterError, SqlBuildParseError, SqlBuildRuntimeError
 from .logging_config import app_name
+
+
+@dataclass
+class Options:
+    allow_drop_tables: bool
+    allow_drop_catalogs: bool
+
+    def __str__(self):
+        values = [f"\n\t{a}: {v}" for a, v in self.__dict__.items()]
+        values = "".join(values)
+        return f"Manifest options:{values}"
 
 
 @dataclass
@@ -116,10 +126,8 @@ class Manifest:
                 warning_msg = f"Warning loading manifest file {self.manifest_file}: integer execution_order for group {grp} is not defined"
                 log.warning(warning_msg)
 
-            # load the script files defined in that group
-            scripts: list[Script] = self._load_group_script(grp)
             # create a group type and add to class list
-            self.groups.append(Group(group=grp, scripts=scripts, execution_order=execution_order))
+            self.groups.append(Group(group=grp, execution_order=execution_order))
 
         # sort them in order they are defined to execut
         self.groups.sort(key=lambda grp: grp.execution_order)
