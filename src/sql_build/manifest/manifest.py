@@ -6,7 +6,8 @@ from typing import Final
 import yaml
 
 from ._environment import Environment
-from ._manifest_comp import Group, Options, Script, Variable
+from ._manifest_comp import Group, Options
+from ._script import Script, Variable
 from .exception import SqlBuildError, SqlBuildParameterError, SqlBuildParseError, SqlBuildRuntimeError
 from .logging_config import app_name
 
