@@ -21,10 +21,10 @@ resources:
           default: ""
 
       tasks:
-        - task_key: build_manifest
+        - task_key: deploy_manifest
           python_wheel_task:
             package_name: sql_build
-            entry_point: sql_build_build_manifest
+            entry_point: sql_build_deploy_manifest
             named_parameters:
               component: sql_build
               manifest-path: ./ci/sql_build

@@ -23,7 +23,7 @@ dev = [
 ]
 
 [project.scripts]
-sql_build_build_manifest = "sql_build.entry_point:build_manifest"
+sql_build_deploy_manifest = "sql_build.entry_point:deploy_manifest"
 
 [build-system]
 requires = ["hatchling"]

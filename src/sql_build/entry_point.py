@@ -10,7 +10,7 @@ from .manifest import (
 )
 
 
-def build_manifest(
+def deploy_manifest(
     catalog: str | None = None,
     component: str | None = None,
     manifest: str | None = None,
