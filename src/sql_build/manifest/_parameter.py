@@ -44,6 +44,37 @@ def parse_argument_bool(
 
     return value
 
+def parse_argument_string_list(args: Namespace | tuple, name: str, value: str | None, default: str | None = None) -> str:
+    log = logging.getLogger(app_name)
+
+    if isinstance(args, tuple):
+        args = args[0]
+
+    log.debug(f"parse_argument_string: args={args}, name={name}, value={value}, default={default}")
+
+    if isinstance(value, str):
+        value = value.strip()
+
+    if value is None:
+        arg_dict = vars(args)
+        value = arg_dict[name]
+        if isinstance(value, list):
+            value = value[0]
+        log.debug(f"parse_argument_string: args={arg_dict}, name={name}, value={value}, default={default}")
+
+    if value is None:
+        if not isinstance(default, str):
+            raise SqlBuildParameterError(
+                f"Argument '{name}' is required unless a default value of type str is provided."
+            )
+        else:
+            value = default
+
+    list_value:list[str] = value.split(",")
+    list_value = [v.strip() for v in list_value]
+
+    return list_value
+
 
 def parse_argument_string(args: Namespace | tuple, name: str, value: str | None, default: str | None = None) -> str:
     log = logging.getLogger(app_name)

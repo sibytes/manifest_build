@@ -217,36 +217,41 @@ class Manifest:
         self.options = Options(allow_drop_catalogs=allow_drop_catalogs, allow_drop_tables=allow_drop_tables)
         log.info(str(self.options))
 
-    def _set_groups(self, group: str):
+    def _set_groups(self, group: list[str]):
+
+        log = logging.getLogger(app_name)
         self.groups: list[Group] = []
-        if isinstance(group, str) and group == "":
-            for grp, data in self.manifest["manifest"].items():
-                if grp in self._HEADERS:
-                    continue
+        groups: set[str] = []
+        manifest: dict = self.manifest["manifest"]
 
-                try:
-                    execution_order: int = int(data.get("execution_order", 0))
-                except (ValueError, TypeError):
-                    execution_order = 0
-                    warning_msg = f"Warning loading manifest file {self.manifest_file}: integer execution_order for group {grp} is not defined"
-                    raise Warning(warning_msg)
+        match group:
+            case None | [] | [""]:
+                groups = [grp for grp in manifest if grp not in self._HEADERS]
+            case [*_]:
+                groups = group
+            case _:
+                raise TypeError
 
-                self.groups.append(
-                    Group(group=grp, scripts=self._load_group_script(grp), execution_order=execution_order)
-                )
-            self.groups.sort(key=lambda grp: grp.execution_order)
+        for grp in groups:
+            if grp not in manifest:
+                msg = f"Warning loading manifest file {self.manifest_file}: group called {grp} is not defined in the manifest"
+                raise SqlBuildParameterError(msg)
 
-        elif isinstance(group, str) and group != "":
-            self.groups.append(Group(group=group, scripts=self._load_group_script(group), execution_order=0))
-        elif isinstance(group, list):
-            for g in group:
-                if not isinstance(g, str) or not g:
-                    error_msg = f"Invalid group type {type(g)} for group {g} in manifest {self.manifest_file}. Group must be a string."
-                    raise SqlBuildError(error_msg)
-                self.groups.append(Group(group=g, scripts=self._load_group_script(g), execution_order=0))
-        else:
-            error_msg = f"Invalid group type {type(group)} for group {group} in manifest {self.manifest_file}"
-            raise SqlBuildError(error_msg)
+            try:
+                manifest_group = manifest[grp]
+                execution_order: int = int(manifest_group.get("execution_order", 0))
+            except (ValueError, TypeError):
+                execution_order = 0
+                warning_msg = f"Warning loading manifest file {self.manifest_file}: integer execution_order for group {grp} is not defined"
+                log.warning(warning_msg)
+
+            # load the script files defined in that group
+            scripts: list[Script] = self._load_group_script(grp)
+            # create a group type and add to class list
+            self.groups.append(Group(group=grp, scripts=scripts, execution_order=execution_order))
+
+        # sort them in order they are defined to execut
+        self.groups.sort(key=lambda grp: grp.execution_order)
 
     def _collect_parse_errors(self):
         self.parse_errors = []

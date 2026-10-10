@@ -7,6 +7,7 @@ from .manifest import (
     parse_argument_bool,
     parse_argument_catalog_name,
     parse_argument_string,
+    parse_argument_string_list,
 )
 
 
@@ -41,7 +42,7 @@ def deploy_manifest(
     manifest = parse_argument_string(args, "manifest", manifest)
     manifest_path = parse_argument_string(args, "manifest_path", manifest_path)
     root_path = parse_argument_string(args, "root_path", root_path)
-    group = parse_argument_string(args, "group", group)
+    group = parse_argument_string_list(args, "group", group)
     enable_parse = parse_argument_bool(args, "enable_pase", enable_parse)
     dry_run = parse_argument_bool(args, "dry_run", dry_run)
 
