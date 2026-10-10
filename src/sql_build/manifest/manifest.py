@@ -1,4 +1,3 @@
-import glob
 import logging
 from dataclasses import dataclass, field
 from typing import Final
@@ -7,7 +6,7 @@ import yaml
 
 from ._environment import Environment
 from ._manifest_comp import Group, Options
-from ._script import Script, Variable
+from ._script import Script
 from .exception import SqlBuildError, SqlBuildParameterError, SqlBuildParseError, SqlBuildRuntimeError
 from .logging_config import app_name
 
@@ -132,43 +131,13 @@ class Manifest:
             if grp_parse_errors:
                 self.parse_errors.extend(grp_parse_errors)
 
-    def _load_group_script(self, group: str):
-        log = logging.getLogger(app_name)
-        scripts: list[Script] = []
-
-        try:
-            script_group: list[str] = self.manifest["manifest"][group]["scripts"]
-        except (KeyError, TypeError) as e:
-            error_msg = f"Error loading manifest file {self.manifest_file}: {e}"
-            raise SqlBuildError(error_msg)
-
-        for script_file in script_group:
-            glob_path = self.sql_project_root + "/" + script_file
-            log.info(f"Loading script(s) {glob_path}")
-            files = glob.glob(glob_path)
-            if not files:
-                error_msg = f"No files found for script {script_file} with glob path {glob_path} in manifest {self.manifest_file}"
-                raise SqlBuildError(error_msg)
-
-            for file in files:
-                script: Script = Script(
-                    catalog=self.catalog,
-                    use_catalog=group != "catalog",
-                    file=file,
-                    variables={Variable.catalog: self.catalog, Variable.environment: self.environment.value},
-                    enable_parse=self.enable_parse,
-                )
-                scripts.append(script)
-
-        return scripts
-
     def run(self, dry_run: bool = False):
         log = logging.getLogger(app_name)
         log.info(f"Running manifest for group {self.manifest}")
         self.runtime_errors = []
         for group in self.groups:
             log.info(f"Running group {group.group} with execution order {group.execution_order}")
-            for script in group.scripts:
+            for script in group.scripts.values():
                 script.run(dry_run=dry_run)
                 if not script.succeeded:
                     self.runtime_errors.append(

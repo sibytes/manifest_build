@@ -2,6 +2,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
+from uuid import UUID, uuid4
 
 import jinja2
 from databricks.sdk.runtime import spark
@@ -15,6 +16,16 @@ class Variable(Enum):
     environment = "environment"
 
 
+class ScriptType(Enum):
+    catalog = "catalog"
+    schema = "schema"
+    volume = "volume"
+    view = "view"
+    table = "table"
+    function = "function"
+    procedure = "procedure"
+
+
 @dataclass
 class Script:
     file: str
@@ -26,6 +37,8 @@ class Script:
     error: str | None = field(default=None)
     succeeded: bool = field(default=False)
     parse_errors: list[SqlBuildParseError] | None = field(default=None)
+    key: UUID | None = field(default=uuid4())
+    type: ScriptType | None = field(default=None)
 
     def __post_init__(self):
         log = logging.getLogger(app_name)
@@ -105,4 +118,3 @@ class Script:
                 data = template.render(replace)
         log.debug(f"Rendered jinja for script {data}")
         return data
-
