@@ -127,7 +127,7 @@ class Manifest:
                 log.warning(warning_msg)
 
             # create a group type and add to class list
-            self.groups.append(Group(group=grp, execution_order=execution_order))
+            self.groups.append(Group(group=grp, manifest=self, execution_order=execution_order))
 
         # sort them in order they are defined to execut
         self.groups.sort(key=lambda grp: grp.execution_order)
