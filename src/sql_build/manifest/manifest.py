@@ -57,7 +57,7 @@ class Manifest:
         os.makedirs(output_dir, exist_ok=True)
         self._parse_output_path = f"{output_dir}/{file_name}"
 
-        self._save_sql()
+        self._save_sql(output_path=self._parse_output_path)
         self._save_parser_result()
 
     def _set_header(self):
@@ -114,12 +114,18 @@ class Manifest:
         self.options = Options(allow_drop_catalogs=allow_drop_catalogs, allow_drop_tables=allow_drop_tables)
         log.info(str(self.options))
 
-    def _save_sql(self):
+    def _save_sql(self, output_path:str):
+
+        def terminate(sql:str):
+            sql = sql.strip()
+            if not sql.endswith(";"):
+                sql = sql + ";"
+            return sql
 
         full_script = ""
         for group in self.groups:
-            output_path = f"{self._parse_output_path}.sql"
-            script = "\n".join([script.sql for script in group.scripts.values()])
+            output_path = f"{output_path}.sql"
+            script = "\n\n\n".join([terminate(script.sql) for script in group.scripts.values()])
             full_script = f"{full_script}\n{script}"
 
         with open(file=output_path, encoding="utf-8", mode="w") as f:
@@ -190,6 +196,13 @@ class Manifest:
                         SqlBuildRuntimeError(group=group.group, file=script.file, error=script.error)
                     )
         self.raise_runtime_errors()
+
+        file_name = dt.datetime.now(tz=pytz.UTC).strftime("%Y%m%d_%H%M%S_%f")
+        output_dir = f"{self.output_path}/run/"
+        os.makedirs(output_dir, exist_ok=True)
+        self._run_output_path = f"{output_dir}/{file_name}"
+
+        self._save_sql(output_path=self._run_output_path)
 
     def raise_runtime_errors(self, log_and_continue: bool = False):
         log = logging.getLogger(app_name)

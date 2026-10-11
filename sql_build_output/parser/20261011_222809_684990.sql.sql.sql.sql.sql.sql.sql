@@ -1,10 +1,10 @@
 
 CREATE CATALOG IF NOT EXISTS dev_sql_build
-MANAGED LOCATION 'abfss://hub@datalakegeneva.dfs.core.windows.net/managed/dev_sql_build'
-create schema if not exists dev_sql_build.`dw`
-create schema if not exists dev_sql_build.`source`
-create schema if not exists dev_sql_build.`stage`
-create schema if not exists dev_sql_build.`audit`
+MANAGED LOCATION 'abfss://hub@datalakegeneva.dfs.core.windows.net/managed/dev_sql_build';
+create schema if not exists dev_sql_build.`dw`;
+create schema if not exists dev_sql_build.`source`;
+create schema if not exists dev_sql_build.`stage`;
+create schema if not exists dev_sql_build.`audit`;
 --!script
 drop table if exists dev_sql_build.audit.audit;
 drop table if exists dev_sql_build.audit.table;  
@@ -51,7 +51,7 @@ create table if not exists `audit`.`table` (
 using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
-)
+);
 create table if not exists `audit`.`test` (
     `test_id`       bigint      generated always as identity,
     `job_run_id`    bigint      not null,
@@ -72,7 +72,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name',
   'delta.appendOnly' = 'true'
-)
+);
 create table if not exists `audit`.`version` (
     `version`       string      not null,
     `git_version`   string      not null,
@@ -88,7 +88,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name',
   'delta.appendOnly' = 'true'
-)
+);
 create table if not exists `audit`.`audit` (
     `job_run_id`    bigint      not null,
     `environment`   string      not null,
@@ -103,7 +103,7 @@ create table if not exists `audit`.`audit` (
 using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
-)
+);
 create table if not exists `source`.`_ireland_sales` (
     `customer_id`           bigint          not null,
     `product_id`            string          not null,
@@ -130,7 +130,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
+cluster by auto;
 create table if not exists `source`.`_customer` (
     `customer_id`           bigint          not null,
     `first_name`            string          not null,
@@ -151,7 +151,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
+cluster by auto;
 create table if not exists `source`.`_england_sales` (
     `customer_id`           bigint          not null,
     `product_id`            string          not null,
@@ -178,7 +178,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
+cluster by auto;
 create table if not exists `source`.`_scotland_sales` (
     `customer_id`           bigint          not null,
     `product_id`            string          not null,
@@ -205,7 +205,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
+cluster by auto;
 create table if not exists `source`.`_store` (
     `store_id`              bigint          not null,
     `address_line_1`        string          not null,
@@ -229,7 +229,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
+cluster by auto;
 create table if not exists `source`.`_product` (
     `product_id`            bigint          not null,
     `sku`                   string          not null,
@@ -250,7 +250,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
+cluster by auto;
 create table if not exists `source`.`_wales_sales` (
     `customer_id`           bigint          not null,
     `product_id`            string          not null,
@@ -277,7 +277,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
+cluster by auto;
 create table if not exists `stage`.`_dw_dim_customer` (
     `customer_id`           bigint          not null,
     `first_name`            string          not null,
@@ -298,7 +298,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
+cluster by auto;
 create table if not exists `stage`.`_dw_dim_store` (
     `store_id`              bigint          not null,
     `address_line_1`        string          not null,
@@ -322,7 +322,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
+cluster by auto;
 create table if not exists `stage`.`_dw_dim_product` (
     `product_id`            bigint          not null,
     `sku`                   string          not null,
@@ -343,7 +343,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
+cluster by auto;
 create table if not exists `stage`.`_dw_fact_sales` (
     `customer_id`           bigint          not null,
     `product_id`            string          not null,
@@ -370,7 +370,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
+cluster by auto;
 create table if not exists `dw`.`dim_store` (
     `store_key`          bigint generated always as identity,
     `store_id`              bigint          not null,
@@ -395,8 +395,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
-
+cluster by auto;
 create table if not exists `dw`.`dim_product` (
     `product_key`           bigint generated always as identity,
     `product_id`            bigint          not null,
@@ -417,8 +416,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
-
+cluster by auto;
 create table if not exists `dw`.`fact_sales` (
     `customer_key`          bigint          not null,
     `product_key`           bigint          not null,
@@ -446,7 +444,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
+cluster by auto;
 create table if not exists `dw`.`dim_customer` (
     `customer_key`          bigint generated always as identity,
     `customer_id`           bigint          not null,
@@ -467,8 +465,7 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by auto
-
+cluster by auto;
 create or replace function stage.cleanse_first_name(first_name string)
     returns string
     contains SQL
