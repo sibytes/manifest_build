@@ -1,4 +1,4 @@
-create table if not exists `stage`.`_dw_dim_strore` (
+create table if not exists `stage`.`_dw_dim_store` (
     `store_id`              bigint          not null,
     `address_line_1`        string          not null,
     `address_line_2`        string          not null,
@@ -12,7 +12,7 @@ create table if not exists `stage`.`_dw_dim_strore` (
     `_created_by`           string          not null,
     `_updated_date`         timestamp       not null,
     `_updated_by`           string          not null,
-    constraint `_dw_dim_strore_pk` primary key (
+    constraint `_dw_dim_store_pk` primary key (
         `_job_run_id`,
         `store_id`
     )
@@ -21,4 +21,4 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by (auto)
+cluster by auto

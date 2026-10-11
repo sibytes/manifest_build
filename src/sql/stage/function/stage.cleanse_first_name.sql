@@ -1,4 +1,4 @@
-create function stage.cleanse_first_name(first_name string)
+create or replace function stage.cleanse_first_name(first_name string)
     returns string
     contains SQL
     comment 'Cleanses a persons first name'

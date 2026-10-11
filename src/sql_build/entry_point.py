@@ -20,6 +20,7 @@ def deploy_manifest(
     root_path: str | None = None,
     dry_run: bool = False,
     enable_parse: bool = True,
+    output_path: str | None = None
 ):
     log = logging.getLogger(app_name)
 
@@ -32,6 +33,7 @@ def deploy_manifest(
     parser.add_argument("--manifest-path", nargs=1, default=None)
     parser.add_argument("--enable-parse", nargs=1, default=None)
     parser.add_argument("--dry-run", nargs=1, default=None)
+    parser.add_argument("--output-path", nargs=1, default=None)
     args = parser.parse_known_args()
     log.info(f"{args}")
 
@@ -45,6 +47,7 @@ def deploy_manifest(
     group = parse_argument_string_list(args, "group", group)
     enable_parse = parse_argument_bool(args, "enable_pase", enable_parse)
     dry_run = parse_argument_bool(args, "dry_run", dry_run)
+    output_path = parse_argument_string(args, "output_path", output_path, "./sql_build_output")
 
     manifest: Manifest = Manifest.load(
         catalog=catalog,

@@ -15,12 +15,12 @@ create table if not exists `dw`.`dim_store` (
     `_updated_date`         timestamp       not null,
     `_updated_by`           string          not null,
     constraint `dim_store_pk` primary key (
-        `store_key`,
+        `store_key`
     )
 )
 using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by (auto)
+cluster by auto
 

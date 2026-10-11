@@ -14,7 +14,7 @@ manifest:
   schema:
     execution_order: 1
     scripts:
-      - schema/audit.sql
+      - schema/*.sql
 
   pre_build:
     execution_order: 2
@@ -32,17 +32,19 @@ manifest:
       - stage/table/*.sql
       - dw/table/*.sql
 
+  functions:
+    execution_order: 4
+    scripts:
+      - stage/function/*.sql
+
   views:
-    execution_order: 3
+    execution_order: 5
     scripts:
       - source/view/*.sql
       - stage/view/*.sql
-      - dw/view/*.sql
 
   procedures:
-    execution_order: 3
+    execution_order: 6
     scripts:
       - dw/procedure/*.sql
-      - stage/function/*.sql
-
 

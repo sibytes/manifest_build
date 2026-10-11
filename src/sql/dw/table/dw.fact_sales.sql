@@ -25,6 +25,4 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by (auto)
-
-BIGINT GENERATED ALWAYS AS IDENTITY
+cluster by auto

@@ -21,4 +21,4 @@ using delta
 tblproperties (
   'delta.columnMapping.mode' = 'name'
 )
-cluster by (auto)
+cluster by auto
