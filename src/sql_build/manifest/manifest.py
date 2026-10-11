@@ -1,7 +1,7 @@
 import datetime as dt
+import json
 import logging
 import os
-import json
 from dataclasses import dataclass, field
 from typing import Final
 
@@ -114,17 +114,17 @@ class Manifest:
         self.options = Options(allow_drop_catalogs=allow_drop_catalogs, allow_drop_tables=allow_drop_tables)
         log.info(str(self.options))
 
-    def _save_sql(self, output_path:str):
+    def _save_sql(self, output_path: str):
 
-        def terminate(sql:str):
+        def terminate(sql: str):
             sql = sql.strip()
             if not sql.endswith(";"):
                 sql = sql + ";"
             return sql
 
+        output_path = f"{output_path}.sql"
         full_script = ""
         for group in self.groups:
-            output_path = f"{output_path}.sql"
             script = "\n\n\n".join([terminate(script.sql) for script in group.scripts.values()])
             full_script = f"{full_script}\n\n\n{script}"
 
@@ -133,10 +133,11 @@ class Manifest:
 
     def _save_parser_result(self):
 
-        full_result:dict[str,str] = {}
+        output_path = f"{self._parse_output_path}.json"
+        full_result: dict[str, str] = {}
+
         for group in self.groups:
-            output_path = f"{self._parse_output_path}.json"
-            result:dict[str,str] = {str(key): script.result for key, script in group.scripts.items()}
+            result: dict[str, str] = {str(key): script.result for key, script in group.scripts.items()}
             full_result = full_result | result
 
         with open(file=output_path, encoding="utf-8", mode="w") as f:
@@ -265,7 +266,7 @@ class Manifest:
         manifest_path: str,
         extension: str,
         enable_parse: bool,
-        output_path:str
+        output_path: str,
     ) -> dict:
 
         log = logging.getLogger(app_name)
@@ -283,7 +284,7 @@ class Manifest:
             manifest_file=manifest_file,
             manifest=manifest,
             enable_parse=enable_parse,
-            output_path=output_path
+            output_path=output_path,
         )
 
         return manifest

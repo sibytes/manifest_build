@@ -20,7 +20,7 @@ def deploy_manifest(
     root_path: str | None = None,
     dry_run: bool = False,
     enable_parse: bool = True,
-    output_path: str | None = None
+    output_path: str | None = None,
 ):
     log = logging.getLogger(app_name)
 

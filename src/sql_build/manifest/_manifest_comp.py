@@ -12,12 +12,11 @@ from .logging_config import app_name
 class Group:
     group: str
     execution_order: int
-    manifest:object 
+    manifest: object
     scripts: dict[UUID, Script] | None = field(default=None)
 
     def __post_init__(self):
         self._load_group_script()
-
 
     def get_parse_errors(self):
         parse_errors: list[SqlBuildParseError] = []
@@ -54,7 +53,10 @@ class Group:
                     catalog=self.manifest.catalog,
                     use_catalog=self.group != "catalog",
                     file=file,
-                    variables={Variable.catalog: self.manifest.catalog, Variable.environment: self.manifest.environment.value},
+                    variables={
+                        Variable.catalog: self.manifest.catalog,
+                        Variable.environment: self.manifest.environment.value,
+                    },
                     enable_parse=self.manifest.enable_parse,
                     key=key,
                 )

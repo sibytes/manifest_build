@@ -8,5 +8,5 @@ deploy_manifest(
     manifest_path="./ci/sql_build",
     root_path="/Users/shaunryan/dev/databricks/sql_build",
     dry_run=False,
-    output_path="./sql_build_output"
+    output_path="./sql_build_output",
 )
