@@ -9,7 +9,7 @@ create table if not exists `source`.`_customer` (
     `_created_by`           string          not null,
     `_updated_date`         timestamp       not null,
     `_updated_by`           string          not null,
-    constraint `_customer` primary key (
+    constraint `_customer_pk` primary key (
         `_job_run_id`,
         `customer_id`
     )

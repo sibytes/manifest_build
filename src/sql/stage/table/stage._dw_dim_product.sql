@@ -8,7 +8,7 @@ create table if not exists `stage`.`_dw_dim_product` (
     `_created_by`           string          not null,
     `_updated_date`         timestamp       not null,
     `_updated_by`           string          not null,
-    constraint `_dw_dim_product` primary key (
+    constraint `_dw_dim_product_pk` primary key (
         `_job_run_id`,
         `product_id`
     )

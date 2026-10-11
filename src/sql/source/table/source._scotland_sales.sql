@@ -12,7 +12,7 @@ create table if not exists `source`.`_scotland_sales` (
     `_created_by`           string          not null,
     `_updated_date`         timestamp       not null,
     `_updated_by`           string          not null,
-    constraint `_scotland_sales` primary key (
+    constraint `_scotland_sales_pk` primary key (
         `_job_run_id`,
         `customer_id`,
         `product_id`,

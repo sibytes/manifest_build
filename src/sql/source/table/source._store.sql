@@ -1,6 +1,5 @@
 create table if not exists `source`.`_store` (
     `store_id`              bigint          not null,
-    `sku`                   string          not null,
     `address_line_1`        string          not null,
     `address_line_2`        string          not null,
     `address_line_3`        string          not null,
@@ -13,7 +12,7 @@ create table if not exists `source`.`_store` (
     `_created_by`           string          not null,
     `_updated_date`         timestamp       not null,
     `_updated_by`           string          not null,
-    constraint `_store` primary key (
+    constraint `_store_pk` primary key (
         `_job_run_id`,
         `store_id`
     )
