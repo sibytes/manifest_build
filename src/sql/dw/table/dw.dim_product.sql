@@ -1,5 +1,6 @@
 create table if not exists `dw`.`dim_product` (
-    `product_key`          bigint generated always as identity,
+    `product_key`           bigint generated always as identity,
+    `product_id`            bigint          not null,
     `sku`                   string          not null,
     `name`                  string          not null,
     `sub_category`          string          not null,

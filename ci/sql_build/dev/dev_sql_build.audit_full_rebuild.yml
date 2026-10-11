@@ -6,11 +6,6 @@ manifest:
     allow_drop_tables: True
     allow_drop_catalog: True
 
-  pre_build:
-    execution_order: 2
-    scripts:
-      - audit/scripts/*.sql
-
   catalog:
     execution_order: 0
     scripts:
@@ -21,7 +16,33 @@ manifest:
     scripts:
       - schema/audit.sql
 
+  pre_build:
+    execution_order: 2
+    scripts:
+      - audit/scripts/*.sql
+      - source/scripts/*.sql
+      - stage/scripts/*.sql
+      - dw/scripts/*.sql
+
   tables:
     execution_order: 3
     scripts:
       - audit/table/*.sql
+      - source/table/*.sql
+      - stage/table/*.sql
+      - dw/table/*.sql
+
+  views:
+    execution_order: 3
+    scripts:
+      - source/view/*.sql
+      - stage/view/*.sql
+      - dw/view/*.sql
+
+  procedures:
+    execution_order: 3
+    scripts:
+      - dw/procedure/*.sql
+      - stage/function/*.sql
+
+

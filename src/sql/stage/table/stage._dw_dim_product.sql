@@ -1,4 +1,5 @@
 create table if not exists `stage`.`_dw_dim_product` (
+    `product_id`            bigint          not null,
     `sku`                   string          not null,
     `name`                  string          not null,
     `sub_category`          string          not null,
