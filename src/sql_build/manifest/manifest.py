@@ -126,7 +126,7 @@ class Manifest:
         for group in self.groups:
             output_path = f"{output_path}.sql"
             script = "\n\n\n".join([terminate(script.sql) for script in group.scripts.values()])
-            full_script = f"{full_script}\n{script}"
+            full_script = f"{full_script}\n\n\n{script}"
 
         with open(file=output_path, encoding="utf-8", mode="w") as f:
             f.write(full_script)
