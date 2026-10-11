@@ -1,7 +1,11 @@
+import datetime as dt
 import logging
+import os
+import json
 from dataclasses import dataclass, field
 from typing import Final
 
+import pytz
 import yaml
 
 from ._environment import Environment
@@ -29,6 +33,7 @@ class Manifest:
     manifest_file: str
     manifest: dict
     environment: Environment
+    output_path: str
     sql_project_root: str | None = field(default=None)
     groups: list[Group] = field(default=None)
     runtime_errors: list[SqlBuildRuntimeError] | None = field(default=None)
@@ -46,6 +51,14 @@ class Manifest:
         self._set_groups(group)
         self._collect_parse_errors()
         self.raise_parse_errors()
+
+        file_name = dt.datetime.now(tz=pytz.UTC).strftime("%Y%m%d_%H%M%S_%f")
+        output_dir = f"{self.output_path}/parser/"
+        os.makedirs(output_dir, exist_ok=True)
+        self._parse_output_path = f"{output_dir}/{file_name}"
+
+        self._save_sql()
+        self._save_parser_result()
 
     def _set_header(self):
 
@@ -75,6 +88,9 @@ class Manifest:
         self.sql_project_root = self.root_path + "/" + self.sql_project_root
         log.info(f"Project root path: {self.sql_project_root}")
 
+        self.output_path = self.root_path + "/" + self.output_path
+        log.info(f"Project sql build output path: {self.output_path}")
+
     def _set_options(self):
         log = logging.getLogger(app_name)
 
@@ -97,6 +113,28 @@ class Manifest:
 
         self.options = Options(allow_drop_catalogs=allow_drop_catalogs, allow_drop_tables=allow_drop_tables)
         log.info(str(self.options))
+
+    def _save_sql(self):
+
+        full_script = ""
+        for group in self.groups:
+            output_path = f"{self._parse_output_path}.sql"
+            script = "\n".join([script.sql for script in group.scripts.values()])
+            full_script = f"{full_script}\n{script}"
+
+        with open(file=output_path, encoding="utf-8", mode="w") as f:
+            f.write(full_script)
+
+    def _save_parser_result(self):
+
+        full_result:dict[str,str] = {}
+        for group in self.groups:
+            output_path = f"{self._parse_output_path}.json"
+            result:dict[str,str] = {str(key): script.result for key, script in group.scripts.items()}
+            full_result = full_result | result
+
+        with open(file=output_path, encoding="utf-8", mode="w") as f:
+            json.dump(full_result, f, ensure_ascii=False, indent=4)
 
     def _set_groups(self, group: list[str]):
 
@@ -214,6 +252,7 @@ class Manifest:
         manifest_path: str,
         extension: str,
         enable_parse: bool,
+        output_path:str
     ) -> dict:
 
         log = logging.getLogger(app_name)
@@ -231,6 +270,7 @@ class Manifest:
             manifest_file=manifest_file,
             manifest=manifest,
             enable_parse=enable_parse,
+            output_path=output_path
         )
 
         return manifest

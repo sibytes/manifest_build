@@ -34,6 +34,7 @@ class Script:
     use_catalog: bool
     enable_parse: bool
     sql: str | None = field(default=None)
+    parse_result: str | None = field(default=None)
     error: str | None = field(default=None)
     succeeded: bool = field(default=False)
     parse_errors: list[SqlBuildParseError] | None = field(default=None)
@@ -58,14 +59,13 @@ class Script:
         """,
             sql=sql,
         )
-        result = parse_result.collect()[0]["result"]
-        statements: list = json.loads(result)
+        self.result = json.loads(parse_result.collect()[0]["result"])
         parse_errors: list[SqlBuildParseError] = []
 
-        for statement in statements:
-            parse_success: bool = statement["parse_success"]
+        for result in self.result:
+            parse_success: bool = result["parse_success"]
             if not parse_success:
-                parse_errors.append(SqlBuildParseError(parse_error=statement, file=self.file, sql=sql))
+                parse_errors.append(SqlBuildParseError(parse_error=result, file=self.file, sql=sql))
 
         return parse_errors
 

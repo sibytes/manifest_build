@@ -58,6 +58,7 @@ def deploy_manifest(
         manifest_path=manifest_path,
         extension=MANIFEST_EXT,
         enable_parse=enable_parse,
+        output_path=output_path,
     )
 
     manifest.parse(group=group)

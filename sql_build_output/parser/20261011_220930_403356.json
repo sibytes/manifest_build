@@ -1,0 +1,1028 @@
+{
+    "89cf9e72-6061-49c0-bbc3-0e7e35751047": [
+        {
+            "start": 1,
+            "length": 131,
+            "parse_success": true,
+            "statement_identifier": "",
+            "statement_code": 0
+        }
+    ],
+    "479c5341-85f5-4c9e-b1d4-b7c2f1008b1d": [
+        {
+            "start": 1,
+            "length": 46,
+            "parse_success": true,
+            "statement_identifier": "CREATE SCHEMA",
+            "statement_code": 64
+        }
+    ],
+    "8a79a98d-79bc-463b-9172-b030cf87a5bf": [
+        {
+            "start": 1,
+            "length": 50,
+            "parse_success": true,
+            "statement_identifier": "CREATE SCHEMA",
+            "statement_code": 64
+        }
+    ],
+    "b15e1a0c-326c-4fa8-af14-cad453179596": [
+        {
+            "start": 1,
+            "length": 49,
+            "parse_success": true,
+            "statement_identifier": "CREATE SCHEMA",
+            "statement_code": 64
+        }
+    ],
+    "42a31312-0c85-49b2-9811-a38d00f13a23": [
+        {
+            "start": 1,
+            "length": 49,
+            "parse_success": true,
+            "statement_identifier": "CREATE SCHEMA",
+            "statement_code": 64
+        }
+    ],
+    "f0c58040-9b86-4222-9871-a68092b3ae32": [
+        {
+            "start": 1,
+            "length": 56,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "audit",
+                    "audit"
+                ]
+            ]
+        },
+        {
+            "start": 59,
+            "length": 46,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "audit",
+                    "table"
+                ]
+            ]
+        },
+        {
+            "start": 109,
+            "length": 45,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "audit",
+                    "test"
+                ]
+            ]
+        },
+        {
+            "start": 157,
+            "length": 48,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "audit",
+                    "version"
+                ]
+            ]
+        }
+    ],
+    "f69a5a3f-aff3-419f-a498-4b87504cc505": [
+        {
+            "start": 1,
+            "length": 66,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "source",
+                    "_england_sales"
+                ]
+            ]
+        },
+        {
+            "start": 69,
+            "length": 56,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "source",
+                    "_ireland_sales"
+                ]
+            ]
+        },
+        {
+            "start": 129,
+            "length": 57,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "source",
+                    "_scotland_sales"
+                ]
+            ]
+        },
+        {
+            "start": 189,
+            "length": 54,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "source",
+                    "_wales_sales"
+                ]
+            ]
+        },
+        {
+            "start": 245,
+            "length": 51,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "source",
+                    "_customer"
+                ]
+            ]
+        },
+        {
+            "start": 298,
+            "length": 48,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "source",
+                    "_store"
+                ]
+            ]
+        },
+        {
+            "start": 348,
+            "length": 50,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "source",
+                    "_product"
+                ]
+            ]
+        }
+    ],
+    "67370b10-afbb-49c4-99f6-8f7a5cbec5d7": [
+        {
+            "start": 1,
+            "length": 65,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "stage",
+                    "_dw_fact_sales"
+                ]
+            ]
+        },
+        {
+            "start": 68,
+            "length": 56,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "stage",
+                    "_dw_dim_product"
+                ]
+            ]
+        },
+        {
+            "start": 126,
+            "length": 57,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "stage",
+                    "_dw_dim_customer"
+                ]
+            ]
+        },
+        {
+            "start": 185,
+            "length": 54,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "stage",
+                    "_dw_dim_store"
+                ]
+            ]
+        },
+        {
+            "start": 241,
+            "length": 55,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "stage",
+                    "_dw_dim_strore"
+                ]
+            ]
+        }
+    ],
+    "9f462bc6-80c2-4166-b897-b6a594592b18": [
+        {
+            "start": 1,
+            "length": 60,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "dw",
+                    "dim_customer"
+                ]
+            ]
+        },
+        {
+            "start": 63,
+            "length": 49,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "dw",
+                    "dim_product"
+                ]
+            ]
+        },
+        {
+            "start": 116,
+            "length": 47,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "dw",
+                    "dim_store"
+                ]
+            ]
+        },
+        {
+            "start": 166,
+            "length": 48,
+            "parse_success": true,
+            "statement_identifier": "DROP TABLE",
+            "statement_code": 32,
+            "target_table_references": [
+                [
+                    "dev_sql_build",
+                    "dw",
+                    "fact_sales"
+                ]
+            ]
+        }
+    ],
+    "0d267d6b-e70b-46c0-ab4d-1831869486aa": [
+        {
+            "start": 1,
+            "length": 967,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "audit",
+                    "table"
+                ]
+            ]
+        }
+    ],
+    "be68904b-2613-4cfc-8774-4a0b101dc989": [
+        {
+            "start": 1,
+            "length": 759,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "audit",
+                    "test"
+                ]
+            ]
+        }
+    ],
+    "6d6102c6-263a-4bb3-b6a8-a2582568e85a": [
+        {
+            "start": 1,
+            "length": 535,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "audit",
+                    "version"
+                ]
+            ]
+        }
+    ],
+    "57d47387-f288-4c4e-a1ed-69195284c790": [
+        {
+            "start": 1,
+            "length": 503,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "audit",
+                    "audit"
+                ]
+            ]
+        }
+    ],
+    "83009e38-4a7a-4d6c-9123-fe0d176b62dc": [
+        {
+            "start": 1,
+            "length": 1012,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "source",
+                    "_ireland_sales"
+                ]
+            ]
+        }
+    ],
+    "7c58b6d3-419a-47b4-a03a-bacfa775357b": [
+        {
+            "start": 1,
+            "length": 770,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "source",
+                    "_customer"
+                ]
+            ]
+        }
+    ],
+    "ed824ce4-22d3-4972-8402-d431391684d2": [
+        {
+            "start": 1,
+            "length": 1012,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "source",
+                    "_england_sales"
+                ]
+            ]
+        }
+    ],
+    "acb8dfb2-e932-4176-a1a3-686fd60e0168": [
+        {
+            "start": 1,
+            "length": 1014,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "source",
+                    "_scotland_sales"
+                ]
+            ]
+        }
+    ],
+    "abcbdd66-650c-4c0f-9e1c-7c6f862c68e1": [
+        {
+            "start": 1,
+            "length": 923,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "source",
+                    "_store"
+                ]
+            ]
+        }
+    ],
+    "fe1c3745-f46a-4577-8978-8b6cc09cddc9": [
+        {
+            "start": 1,
+            "length": 767,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "source",
+                    "_product"
+                ]
+            ]
+        }
+    ],
+    "78dfad3c-8026-4e4e-9401-c7233f6d861d": [
+        {
+            "start": 1,
+            "length": 1008,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "source",
+                    "_wales_sales"
+                ]
+            ]
+        }
+    ],
+    "4ad16cf9-89a4-4343-b1c1-c461da47f439": [
+        {
+            "start": 1,
+            "length": 783,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "stage",
+                    "_dw_dim_customer"
+                ]
+            ]
+        }
+    ],
+    "3d7397a8-86d3-4a72-9db4-14345180a11e": [
+        {
+            "start": 1,
+            "length": 936,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "stage",
+                    "_dw_dim_store"
+                ]
+            ]
+        }
+    ],
+    "0af0abf9-06ca-4463-8009-f475cbade0d8": [
+        {
+            "start": 1,
+            "length": 780,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "stage",
+                    "_dw_dim_product"
+                ]
+            ]
+        }
+    ],
+    "719508d2-0784-41e7-8c13-c9d66463caaf": [
+        {
+            "start": 1,
+            "length": 1011,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "stage",
+                    "_dw_fact_sales"
+                ]
+            ]
+        }
+    ],
+    "1446ccaa-a4dd-4635-993b-42fbb9d54a9d": [
+        {
+            "start": 1,
+            "length": 1019,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "dw",
+                    "dim_store"
+                ]
+            ]
+        }
+    ],
+    "4dcb867a-9110-422d-9a5f-3d23e8ba397e": [
+        {
+            "start": 1,
+            "length": 812,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "dw",
+                    "dim_product"
+                ]
+            ]
+        }
+    ],
+    "75732903-9533-4cca-88f3-745b044af2d1": [
+        {
+            "start": 1,
+            "length": 1046,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "dw",
+                    "fact_sales"
+                ]
+            ]
+        }
+    ],
+    "8a32c4cb-2630-414f-8f9e-f4044797c873": [
+        {
+            "start": 1,
+            "length": 815,
+            "parse_success": true,
+            "statement_identifier": "CREATE TABLE",
+            "statement_code": 77,
+            "target_table_references": [
+                [
+                    "dw",
+                    "dim_customer"
+                ]
+            ]
+        }
+    ],
+    "22c26dcd-19eb-4b9d-8100-5464d1ad8d1c": [
+        {
+            "start": 1,
+            "length": 201,
+            "parse_success": true,
+            "statement_identifier": "CREATE ROUTINE",
+            "statement_code": 14
+        }
+    ],
+    "cc2b0210-c572-4ae0-9be9-8085568550ef": [
+        {
+            "start": 1,
+            "length": 198,
+            "parse_success": true,
+            "statement_identifier": "CREATE ROUTINE",
+            "statement_code": 14
+        }
+    ],
+    "87bfb353-4e12-457d-bf38-85ba21e27d22": [
+        {
+            "start": 1,
+            "length": 85,
+            "parse_success": true,
+            "statement_identifier": "CREATE VIEW",
+            "statement_code": 84,
+            "target_table_references": [
+                [
+                    "source",
+                    "scotland_sales"
+                ]
+            ],
+            "source_table_references": [
+                [
+                    "source",
+                    "_scotland_sales"
+                ]
+            ],
+            "select_list": [
+                {
+                    "name": [
+                        "*"
+                    ]
+                }
+            ]
+        }
+    ],
+    "e39e6619-f11e-42eb-b2fc-eb8745b1a482": [
+        {
+            "start": 1,
+            "length": 71,
+            "parse_success": true,
+            "statement_identifier": "CREATE VIEW",
+            "statement_code": 84,
+            "target_table_references": [
+                [
+                    "source",
+                    "product"
+                ]
+            ],
+            "source_table_references": [
+                [
+                    "source",
+                    "_product"
+                ]
+            ],
+            "select_list": [
+                {
+                    "name": [
+                        "*"
+                    ]
+                }
+            ]
+        }
+    ],
+    "84dd257f-8085-4677-a1f8-435e20d8d5bf": [
+        {
+            "start": 1,
+            "length": 311,
+            "parse_success": true,
+            "statement_identifier": "CREATE VIEW",
+            "statement_code": 84,
+            "target_table_references": [
+                [
+                    "source",
+                    "customer"
+                ]
+            ],
+            "source_table_references": [
+                [
+                    "source",
+                    "_customer"
+                ]
+            ],
+            "function_references": [
+                [
+                    "stage",
+                    "cleanse_first_name"
+                ],
+                [
+                    "stage",
+                    "cleanse_last_name"
+                ]
+            ],
+            "select_list": [
+                {
+                    "name": [
+                        "customer_id"
+                    ]
+                },
+                {
+                    "name": [
+                        "first_name"
+                    ]
+                },
+                {
+                    "name": [
+                        "last_name"
+                    ]
+                },
+                {
+                    "name": [
+                        "date_of_brith"
+                    ]
+                },
+                {
+                    "name": [
+                        "gender"
+                    ]
+                },
+                {
+                    "name": [
+                        "_job_run_id"
+                    ]
+                },
+                {
+                    "name": [
+                        "_created_date"
+                    ]
+                },
+                {
+                    "name": [
+                        "_created_by"
+                    ]
+                },
+                {
+                    "name": [
+                        "_updated_date"
+                    ]
+                },
+                {
+                    "name": [
+                        "_updated_by"
+                    ]
+                }
+            ]
+        }
+    ],
+    "e7f4fce7-5dd5-481b-8955-a9ef9199b2fb": [
+        {
+            "start": 1,
+            "length": 83,
+            "parse_success": true,
+            "statement_identifier": "CREATE VIEW",
+            "statement_code": 84,
+            "target_table_references": [
+                [
+                    "source",
+                    "ireland_sales"
+                ]
+            ],
+            "source_table_references": [
+                [
+                    "source",
+                    "_ireland_sales"
+                ]
+            ],
+            "select_list": [
+                {
+                    "name": [
+                        "*"
+                    ]
+                }
+            ]
+        }
+    ],
+    "0a765e1c-582e-4e51-8755-abb9ecb51d2d": [
+        {
+            "start": 1,
+            "length": 79,
+            "parse_success": true,
+            "statement_identifier": "CREATE VIEW",
+            "statement_code": 84,
+            "target_table_references": [
+                [
+                    "source",
+                    "wales_sales"
+                ]
+            ],
+            "source_table_references": [
+                [
+                    "source",
+                    "_wales_sales"
+                ]
+            ],
+            "select_list": [
+                {
+                    "name": [
+                        "*"
+                    ]
+                }
+            ]
+        }
+    ],
+    "fa101dda-645a-4ae7-88c0-e54560885057": [
+        {
+            "start": 1,
+            "length": 67,
+            "parse_success": true,
+            "statement_identifier": "CREATE VIEW",
+            "statement_code": 84,
+            "target_table_references": [
+                [
+                    "source",
+                    "store"
+                ]
+            ],
+            "source_table_references": [
+                [
+                    "source",
+                    "_store"
+                ]
+            ],
+            "select_list": [
+                {
+                    "name": [
+                        "*"
+                    ]
+                }
+            ]
+        }
+    ],
+    "bdb7b043-93b0-4751-800f-56fd0e54e3d5": [
+        {
+            "start": 1,
+            "length": 83,
+            "parse_success": true,
+            "statement_identifier": "CREATE VIEW",
+            "statement_code": 84,
+            "target_table_references": [
+                [
+                    "source",
+                    "england_sales"
+                ]
+            ],
+            "source_table_references": [
+                [
+                    "source",
+                    "_england_sales"
+                ]
+            ],
+            "select_list": [
+                {
+                    "name": [
+                        "*"
+                    ]
+                }
+            ]
+        }
+    ],
+    "66197b80-9788-43fd-97a0-3c186900b40a": [
+        {
+            "start": 1,
+            "length": 81,
+            "parse_success": true,
+            "statement_identifier": "CREATE VIEW",
+            "statement_code": 84,
+            "target_table_references": [
+                [
+                    "stage",
+                    "dw_fact_sales"
+                ]
+            ],
+            "source_table_references": [
+                [
+                    "stage",
+                    "_dw_fact_sales"
+                ]
+            ],
+            "select_list": [
+                {
+                    "name": [
+                        "*"
+                    ]
+                }
+            ]
+        }
+    ],
+    "1422c4c5-fcf6-4daf-8960-af2197afd752": [
+        {
+            "start": 1,
+            "length": 83,
+            "parse_success": true,
+            "statement_identifier": "CREATE VIEW",
+            "statement_code": 84,
+            "target_table_references": [
+                [
+                    "stage",
+                    "dw_dim_product"
+                ]
+            ],
+            "source_table_references": [
+                [
+                    "stage",
+                    "_dw_dim_product"
+                ]
+            ],
+            "select_list": [
+                {
+                    "name": [
+                        "*"
+                    ]
+                }
+            ]
+        }
+    ],
+    "6b26dc27-6afa-4976-93df-5a44e8b9dad7": [
+        {
+            "start": 1,
+            "length": 85,
+            "parse_success": true,
+            "statement_identifier": "CREATE VIEW",
+            "statement_code": 84,
+            "target_table_references": [
+                [
+                    "stage",
+                    "dw_dim_customer"
+                ]
+            ],
+            "source_table_references": [
+                [
+                    "stage",
+                    "_dw_dim_customer"
+                ]
+            ],
+            "select_list": [
+                {
+                    "name": [
+                        "*"
+                    ]
+                }
+            ]
+        }
+    ],
+    "8e8abed1-3b7d-44fd-8c6d-a5bf39ca5a75": [
+        {
+            "start": 1,
+            "length": 79,
+            "parse_success": true,
+            "statement_identifier": "CREATE VIEW",
+            "statement_code": 84,
+            "target_table_references": [
+                [
+                    "stage",
+                    "dw_dim_store"
+                ]
+            ],
+            "source_table_references": [
+                [
+                    "stage",
+                    "_dw_dim_store"
+                ]
+            ],
+            "select_list": [
+                {
+                    "name": [
+                        "*"
+                    ]
+                }
+            ]
+        }
+    ],
+    "9ae1fde3-edaa-4b80-a0c8-736a132afcbf": [
+        {
+            "start": 1,
+            "length": 1917,
+            "parse_success": true,
+            "statement_identifier": "",
+            "statement_code": 0
+        }
+    ],
+    "68c9d538-56c2-48f4-a42a-4ad45594face": [
+        {
+            "start": 1,
+            "length": 2754,
+            "parse_success": true,
+            "statement_identifier": "",
+            "statement_code": 0
+        }
+    ],
+    "dfc1b20f-2ee6-4d08-8a3d-341c0bff89b8": [
+        {
+            "start": 1,
+            "length": 2030,
+            "parse_success": true,
+            "statement_identifier": "",
+            "statement_code": 0
+        }
+    ]
+}
