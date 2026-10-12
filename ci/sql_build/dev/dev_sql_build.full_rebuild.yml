@@ -9,6 +9,7 @@ manifest:
   catalog:
     execution_order: 0
     scripts:
+      - catalog/sql_build.drop.sql
       - catalog/sql_build.sql
 
   schema:

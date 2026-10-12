@@ -52,20 +52,27 @@ class Script:
 
     def _parse_sql(self, sql: str):
         log = logging.getLogger(app_name)
-        log.info(f"Parsing script {self.file}")
-        parse_result = spark.sql(
-            """
-            select parse_sql({sql}) as result
-        """,
-            sql=sql,
-        )
-        self.result = json.loads(parse_result.collect()[0]["result"])
+
         parse_errors: list[SqlBuildParseError] = []
 
-        for result in self.result:
-            parse_success: bool = result["parse_success"]
-            if not parse_success:
-                parse_errors.append(SqlBuildParseError(parse_error=result, file=self.file, sql=sql))
+        if not self.enable_parse:
+            log.warning(f"SQL Parsing disabled, Skipping parsing script {self.file}")
+            return parse_errors
+
+        else:
+            log.info(f"Parsing script {self.file}")
+            parse_result = spark.sql(
+                """
+                select parse_sql({sql}) as result
+            """,
+                sql=sql,
+            )
+            self.result = json.loads(parse_result.collect()[0]["result"])
+
+            for result in self.result:
+                parse_success: bool = result["parse_success"]
+                if not parse_success:
+                    parse_errors.append(SqlBuildParseError(parse_error=result, file=self.file, sql=sql))
 
         return parse_errors
 

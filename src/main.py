@@ -9,4 +9,5 @@ deploy_manifest(
     root_path="/Users/shaunryan/dev/databricks/sql_build",
     dry_run=False,
     output_path="./sql_build_output",
+    enable_parse=True,
 )

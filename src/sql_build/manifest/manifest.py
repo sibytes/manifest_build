@@ -10,6 +10,7 @@ import yaml
 
 from ._environment import Environment
 from ._manifest_comp import Group
+from ._script import Script
 from .exception import SqlBuildError, SqlBuildParameterError, SqlBuildParseError, SqlBuildRuntimeError
 from .logging_config import app_name
 
@@ -42,23 +43,37 @@ class Manifest:
     options: Options | None = field(default=None)
     _HEADERS: Final[tuple[str, ...]] = ("name", "sql_project_root", "catalog_name", "options")
 
+    def __post_init__(self):
+
+        file_name = dt.datetime.now(tz=pytz.UTC).strftime("%Y%m%d_%H%M%S_%f")
+
+        output_dir_parse = f"{self.output_path}/parser/"
+        os.makedirs(output_dir_parse, exist_ok=True)
+        self._parse_output_path = f"{output_dir_parse}/{file_name}"
+
+        output_dir_run = f"{self.output_path}/run/"
+        os.makedirs(output_dir_run, exist_ok=True)
+        self._run_output_path = f"{output_dir_run}/{file_name}"
+
     def parse(self, group: str | list[str] = ""):
         log = logging.getLogger(app_name)
-        log.info(f"Loading manifest for group {group}")
+        log.info(f"Parsing manifest for group {group}")
 
         self._set_header()
         self._set_options()
         self._set_groups(group)
         self._collect_parse_errors()
+        self._save_parse()
         self.raise_parse_errors()
 
-        file_name = dt.datetime.now(tz=pytz.UTC).strftime("%Y%m%d_%H%M%S_%f")
-        output_dir = f"{self.output_path}/parser/"
-        os.makedirs(output_dir, exist_ok=True)
-        self._parse_output_path = f"{output_dir}/{file_name}"
+    def _save_parse(self):
 
-        self._save_sql(output_path=self._parse_output_path)
-        self._save_parser_result()
+        if self.enable_parse:
+            errored = False
+            if self.parse_errors:
+                errored = True
+            self._save_sql(output_path=self._parse_output_path, errored=errored)
+            self._save_parser_result()
 
     def _set_header(self):
 
@@ -114,18 +129,21 @@ class Manifest:
         self.options = Options(allow_drop_catalogs=allow_drop_catalogs, allow_drop_tables=allow_drop_tables)
         log.info(str(self.options))
 
-    def _save_sql(self, output_path: str):
+    def _save_sql(self, output_path: str, errored=bool):
 
-        def terminate(sql: str):
-            sql = sql.strip()
+        errored = ".error" if errored else ""
+
+        def _clean(script: Script):
+            sql = script.sql.strip()
             if not sql.endswith(";"):
                 sql = sql + ";"
+            sql = f"-- key: {script.key!s}\n{sql}"
             return sql
 
-        output_path = f"{output_path}.sql"
+        output_path = f"{output_path}.{errored}.sql"
         full_script = ""
         for group in self.groups:
-            script = "\n\n\n".join([terminate(script.sql) for script in group.scripts.values()])
+            script = "\n\n\n".join([_clean(script) for script in group.scripts.values()])
             full_script = f"{full_script}\n\n\n{script}"
 
         with open(file=output_path, encoding="utf-8", mode="w") as f:
@@ -133,7 +151,8 @@ class Manifest:
 
     def _save_parser_result(self):
 
-        output_path = f"{self._parse_output_path}.json"
+        errored = ".error" if self.parse_errors else ""
+        output_path = f"{self._parse_output_path}{errored}.json"
         full_result: dict[str, str] = {}
 
         for group in self.groups:
@@ -196,14 +215,13 @@ class Manifest:
                     self.runtime_errors.append(
                         SqlBuildRuntimeError(group=group.group, file=script.file, error=script.error)
                     )
+
+        errored = False
+        if self.runtime_errors:
+            errored = True
+        self._save_sql(output_path=self._run_output_path, errored=errored)
+
         self.raise_runtime_errors()
-
-        file_name = dt.datetime.now(tz=pytz.UTC).strftime("%Y%m%d_%H%M%S_%f")
-        output_dir = f"{self.output_path}/run/"
-        os.makedirs(output_dir, exist_ok=True)
-        self._run_output_path = f"{output_dir}/{file_name}"
-
-        self._save_sql(output_path=self._run_output_path)
 
     def raise_runtime_errors(self, log_and_continue: bool = False):
         log = logging.getLogger(app_name)
