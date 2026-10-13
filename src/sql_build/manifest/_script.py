@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 import jinja2
 from databricks.sdk.runtime import spark
 
+from .default_statement import default_statement
 from .exception import SqlBuildParseError
 from .logging_config import app_name
 
@@ -73,6 +74,7 @@ class Script:
                 parse_success: bool = result["parse_success"]
                 if not parse_success:
                     parse_errors.append(SqlBuildParseError(parse_error=result, file=self.file, sql=sql))
+            self.result = default_statement(sql, self.result)
 
         return parse_errors
 
@@ -125,3 +127,4 @@ class Script:
                 data = template.render(replace)
         log.debug(f"Rendered jinja for script {data}")
         return data
+
