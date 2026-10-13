@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 import jinja2
 from databricks.sdk.runtime import spark
 
-from .default_statement import default_statement
+from ._default_statement import default_statement
 from .exception import SqlBuildParseError
 from .logging_config import app_name
 
