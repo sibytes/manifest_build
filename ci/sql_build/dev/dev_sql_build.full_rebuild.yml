@@ -3,9 +3,9 @@ manifest:
   sql_project_root: src/sql
   catalog_name: dev_sql_build
   options:
-    allow_drop_tables: False
-    allow_drop_catalog: False
-    allow_delete_where: False
+    allow_drop_tables: True
+    allow_drop_catalog: True
+    allow_delete_where: True
 
   catalog:
     execution_order: 0
