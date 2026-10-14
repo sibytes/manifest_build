@@ -3,8 +3,9 @@ manifest:
   sql_project_root: src/sql
   catalog_name: dev_sql_build
   options:
-    allow_drop_tables: True
-    allow_drop_catalog: True
+    allow_drop_tables: False
+    allow_drop_catalog: False
+    allow_delete_where: False
 
   catalog:
     execution_order: 0
@@ -20,7 +21,7 @@ manifest:
   pre_build:
     execution_order: 2
     scripts:
-      - audit/scripts/*.sql
+      - audit/scripts/audit.drop*.sql
       - source/scripts/*.sql
       - stage/scripts/*.sql
       - dw/scripts/*.sql
@@ -48,4 +49,9 @@ manifest:
     execution_order: 6
     scripts:
       - dw/procedure/*.sql
+
+  delete_audit_data:
+    execution_order: 7
+    scripts:
+      - audit/scripts/audit.delete*.sql
 

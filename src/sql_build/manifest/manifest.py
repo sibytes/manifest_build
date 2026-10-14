@@ -9,21 +9,9 @@ import pytz
 import yaml
 
 from ._environment import Environment
-from ._manifest_comp import Group
-from ._script import Script
+from ._manifest_comp import Group, Options, Script
 from .exception import SqlBuildError, SqlBuildParameterError, SqlBuildParseError, SqlBuildRuntimeError
 from .logging_config import app_name
-
-
-@dataclass
-class Options:
-    allow_drop_tables: bool
-    allow_drop_catalogs: bool
-
-    def __str__(self):
-        values = [f"\n\t{a}: {v}" for a, v in self.__dict__.items()]
-        values = "".join(values)
-        return f"Manifest options:{values}"
 
 
 @dataclass
@@ -39,6 +27,7 @@ class Manifest:
     groups: list[Group] = field(default=None)
     runtime_errors: list[SqlBuildRuntimeError] | None = field(default=None)
     parse_errors: list[SqlBuildParseError] | None = field(default=None)
+    # option_errors: list[SqlBuildParseError] | None = field(default=None)
     enable_parse: bool | None = field(default=True)
     options: Options | None = field(default=None)
     _HEADERS: Final[tuple[str, ...]] = ("name", "sql_project_root", "catalog_name", "options")
@@ -111,22 +100,26 @@ class Manifest:
 
         allow_drop_tables = False
         allow_drop_catalogs = False
+        allow_delete_where = False
 
         try:
             options: dict[str, bool] = self.manifest["manifest"]["options"]
             allow_drop_catalogs = options.get("allow_drop_tables", allow_drop_catalogs)
             allow_drop_tables = options.get("allow_drop_tables", allow_drop_tables)
+            allow_delete_where = options.get("allow_delete_where", allow_delete_where)
 
         except (ValueError, TypeError):
             log.warning(
                 """Failed to find options in manifest header at manifest.options. Applying non-destructive default options:
                 \tallow_drop_catalogs: False
-                \tallow_drop_tables: False"""
+                \tallow_drop_tables: False
+                \allow_delete_where: False"""
             )
             allow_drop_tables = False
             allow_drop_catalogs = False
+            allow_delete_where = False
 
-        self.options = Options(allow_drop_catalogs=allow_drop_catalogs, allow_drop_tables=allow_drop_tables)
+        self.options = Options(allow_drop_catalogs=allow_drop_catalogs, allow_drop_tables=allow_drop_tables, allow_delete_where=allow_delete_where)
         log.info(str(self.options))
 
     def _save_sql(self, output_path: str, errored=bool):
@@ -151,16 +144,18 @@ class Manifest:
 
     def _save_parser_result(self):
 
-        errored = ".error" if self.parse_errors else ""
-        output_path = f"{self._parse_output_path}{errored}.json"
         full_result: dict[str, str] = {}
 
         for group in self.groups:
             result: dict[str, str] = {str(key): script.result for key, script in group.scripts.items()}
             full_result = full_result | result
 
+        errored = ".error" if self.parse_errors else ""
+        output_path = f"{self._parse_output_path}{errored}.json"
+
         with open(file=output_path, encoding="utf-8", mode="w") as f:
             json.dump(full_result, f, ensure_ascii=False, indent=4)
+
 
     def _set_groups(self, group: list[str]):
 

@@ -21,6 +21,13 @@ class SqlBuildRuntimeError(Exception):
         self.message = f"Group: {self.group}, File: {self.file}, Error: {self.error}"
         super().__init__(self.message)
 
+class SqlBuildOptionError(Exception):
+    def __init__(self, statement: str, file: str):
+        self.statement = statement
+        self.file = file
+        self.message = f"statement {statement} in file {file} is not allowed"
+        super().__init__(self.message)
+
 
 class SqlBuildParseError(Exception):
     def __init__(self, parse_error: dict, file: str, sql: str):

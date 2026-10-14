@@ -11,6 +11,5 @@ create table if not exists `audit`.`version` (
 )
 using delta
 tblproperties (
-  'delta.columnMapping.mode' = 'name',
-  'delta.appendOnly' = 'true'
+  'delta.columnMapping.mode' = 'name'
 )
