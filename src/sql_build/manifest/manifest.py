@@ -119,7 +119,11 @@ class Manifest:
             allow_drop_catalogs = False
             allow_delete_where = False
 
-        self.options = Options(allow_drop_catalogs=allow_drop_catalogs, allow_drop_tables=allow_drop_tables, allow_delete_where=allow_delete_where)
+        self.options = Options(
+            allow_drop_catalogs=allow_drop_catalogs,
+            allow_drop_tables=allow_drop_tables,
+            allow_delete_where=allow_delete_where,
+        )
         log.info(str(self.options))
 
     def _save_sql(self, output_path: str, errored=bool):
@@ -155,7 +159,6 @@ class Manifest:
 
         with open(file=output_path, encoding="utf-8", mode="w") as f:
             json.dump(full_result, f, ensure_ascii=False, indent=4)
-
 
     def _set_groups(self, group: list[str]):
 

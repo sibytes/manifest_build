@@ -9,7 +9,7 @@ import jinja2
 from databricks.sdk.runtime import spark
 
 from ._default_statement import default_statement
-from .exception import SqlBuildError, SqlBuildParseError, SqlBuildOptionError
+from .exception import SqlBuildError, SqlBuildOptionError, SqlBuildParseError
 from .logging_config import app_name
 
 
@@ -27,6 +27,7 @@ class ScriptType(Enum):
     function = "function"
     procedure = "procedure"
 
+
 @dataclass
 class Options:
     allow_drop_tables: bool
@@ -43,13 +44,12 @@ class Options:
         if not self.allow_delete_where:
             self._not_allowed.append("DELETE WHERE")
 
-
     def __str__(self):
         values = [f"\n\t{a}: {v}" for a, v in self.__dict__.items()]
         values = "".join(values)
         return f"Manifest options:{values}"
 
-    def check(self, parse_result:dict[UUID, list[dict]], file:str):
+    def check(self, parse_result: dict[UUID, list[dict]], file: str):
         option_errors: list[SqlBuildOptionError] = []
         if self._not_allowed:
             for statements in parse_result:
@@ -59,7 +59,8 @@ class Options:
                         option_errors.append(SqlBuildOptionError(statement=statement, file=file))
 
         return option_errors
-    
+
+
 @dataclass
 class Script:
     file: str
@@ -67,12 +68,12 @@ class Script:
     catalog: str
     use_catalog: bool
     enable_parse: bool
-    options:Options
+    options: Options
     sql: str | None = field(default=None)
     parse_result: str | None = field(default=None)
     error: str | None = field(default=None)
     succeeded: bool = field(default=False)
-    parse_errors: list[SqlBuildParseError|SqlBuildOptionError] | None = field(default=None)
+    parse_errors: list[SqlBuildParseError | SqlBuildOptionError] | None = field(default=None)
     key: UUID | None = field(default=uuid4())
     type: ScriptType | None = field(default=None)
 
@@ -88,7 +89,7 @@ class Script:
     def _parse_sql(self, sql: str):
         log = logging.getLogger(app_name)
 
-        parse_errors: list[SqlBuildParseError|SqlBuildOptionError] = []
+        parse_errors: list[SqlBuildParseError | SqlBuildOptionError] = []
 
         if not self.enable_parse:
             log.warning(f"SQL Parsing disabled, Skipping parsing script {self.file}")
@@ -110,7 +111,9 @@ class Script:
                     parse_errors.append(SqlBuildParseError(parse_error=result, file=self.file, sql=sql))
             self.result = default_statement(sql, self.result)
 
-            option_errors:list[SqlBuildParseError|SqlBuildOptionError] = self.options.check(parse_result=self.result, file=self.file)
+            option_errors: list[SqlBuildParseError | SqlBuildOptionError] = self.options.check(
+                parse_result=self.result, file=self.file
+            )
             parse_errors.extend(option_errors)
 
         return parse_errors

@@ -21,6 +21,7 @@ class SqlBuildRuntimeError(Exception):
         self.message = f"Group: {self.group}, File: {self.file}, Error: {self.error}"
         super().__init__(self.message)
 
+
 class SqlBuildOptionError(Exception):
     def __init__(self, statement: str, file: str):
         self.statement = statement
